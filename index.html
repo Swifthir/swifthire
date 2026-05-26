@@ -1,4 +1,3 @@
-------------------------------      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,7 +111,7 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
     html { scroll-padding-top: var(--header-height); }
-    body { font-family: var(--font-main); color: var(--text-grey); background-color: var(--white); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+     body { font-family: var(--font-main); color: var(--text-grey); background-color: var(--white); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     h1, h2, h3, h4, h5, h6 { font-family: var(--font-serif); color: var(--text-dark); line-height: 1.2; }
     a { text-decoration: none; color: inherit; }
     img { max-width: 100%; display: block; }
@@ -1293,6 +1292,21 @@
       }, 700);
     });
 
+  </script>
+
+  <!-- ============================================
+       SERVICE WORKER REGISTRATION
+  ============================================ -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      });
+    }
   </script>
 </body>
 </html>```
