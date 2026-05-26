@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title id="pageTitle">Verify Account | Swifthire</title>
+    <meta name="description" content="Please verify your email address to continue to Swifthire.">
+    
+    <!-- PWA Manifest & Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0000CC">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           DESIGN SYSTEM - CSS VARIABLES
+        ============================================ */
+        :root {
+            --primary-50:  #EFF6FF;
+            --primary-100: #DBEAFE;
+            --primary-500: #3B82F6;
+            --primary-600: #2563EB;
+            --primary-700: #1D4ED8;
+            --success-500: #10B981;
+            --success-100: #D1FAE5;
+            --warning-500: #F59E0B;
+            --warning-100: #FEF3C7;
+            --danger-500:  #EF4444;
+            --danger-100:  #FEE2E2;
+            --gray-50:  #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-500: #6B7280;
+            --gray-900: #111827;
+            --white: #FFFFFF;
+            
+            --gradient-primary: linear-gradient(135deg, #2563EB 0%, #8B5CF6 100%);
+            --gradient-subtle:  linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
+            
+            --font-main:  'Plus Jakarta Sans', sans-serif;
+            --font-serif: 'Playfair Display', serif;
+            
+            --shadow-sm:    0 2px 8px rgba(0,0,0,0.05);
+            --shadow-card:  0 10px 30px rgba(0,0,0,0.07);
+            --shadow-blue:  0 8px 25px rgba(37,99,235,0.25);
+            
+            --radius-lg:   1rem;
+            --radius-2xl:  1.5rem;
+            --radius-full: 9999px;
+            
+            --transition:  all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--gray-500);
+            background-color: var(--white);
+            background-image: var(--gradient-subtle);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-sm);
+        }
+        
+        .nav-logo {
+            display: flex; align-items: center; gap: 12px; font-family: var(--font-serif);
+            font-size: 1.5rem; font-weight: 800; color: var(--gray-900); text-decoration: none;
+        }
+        
+        .nav-logo-icon { width: 42px; height: 42px; }
+
+        /* ---- MAIN CONTAINER ---- */
+        .auth-container {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 120px 20px 60px;
+        }
+
+        .auth-card {
+            background: var(--white);
+            width: 100%; max-width: 480px; border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-card); border: 1px solid var(--gray-100);
+            padding: 56px 48px; text-align: center;
+            animation: slideUp 0.5s ease;
+            margin-bottom: 32px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mail-icon-wrapper {
+            width: 80px; height: 80px; background: var(--primary-50);
+            border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px; color: var(--primary-600);
+        }
+
+        .auth-title { font-family: var(--font-serif); font-size: 2.2rem; color: var(--gray-900); margin-bottom: 12px; font-weight: 800; }
+        .auth-subtitle { color: var(--gray-500); font-size: 1rem; line-height: 1.6; margin-bottom: 32px; font-weight: 500; }
+        .email-highlight { color: var(--primary-600); font-weight: 700; word-break: break-all; }
+
+        /* Error/Success Messages */
+        #messageBox {
+            padding: 14px 18px; border-radius: var(--radius-lg); font-size: 0.9rem; font-weight: 600;
+            margin-bottom: 24px; display: none; align-items: center; justify-content: center; gap: 10px; text-align: left;
+        }
+        .msg-error { color: var(--danger-500); background: var(--danger-100); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .msg-success { color: var(--success-500); background: var(--success-100); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .msg-warning { color: #B45309; background: var(--warning-100); border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        /* Actions */
+        .btn-primary {
+            width: 100%; padding: 16px; background: var(--gradient-primary); color: var(--white);
+            border: none; border-radius: var(--radius-full); font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: var(--shadow-blue);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(37,99,235,0.35); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .resend-link {
+            display: inline-block; margin-top: 24px; color: var(--gray-500); font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; background: none; border: none; font-family: inherit; transition: var(--transition);
+        }
+        .resend-link.active { color: var(--primary-600); }
+        .resend-link.active:hover { color: var(--primary-700); text-decoration: underline; }
+
+        .footer-actions { margin-top: 32px; font-size: 0.95rem; color: var(--gray-500); font-weight: 500; }
+        .footer-link { color: var(--primary-600); text-decoration: none; font-weight: 700; }
+        .footer-link:hover { text-decoration: underline; }
+
+        .nav-links-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; font-size: 0.85rem; color: var(--gray-500); font-weight: 500; }
+        .nav-links-footer a { color: var(--gray-500); text-decoration: none; }
+        .nav-links-footer a:hover { color: var(--primary-600); text-decoration: underline; }
+
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            .auth-card { padding: 48px 24px; border-radius: var(--radius-lg); border: none; }
+            .auth-title { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span id="headerAppName">Swifthire</span>
+        </a>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="mail-icon-wrapper">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+            </div>
+
+            <h1 class="auth-title">Check Your Email</h1>
+            
+            <p class="auth-subtitle">
+                We sent a verification link to <br>
+                <span class="email-highlight" id="userEmail">loading...</span><br><br>
+                Click the link in the email to activate your account.
+            </p>
+
+            <div id="messageBox">
+                <svg id="msgIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"></svg>
+                <span id="msgText">Message</span>
+            </div>
+
+            <button type="button" class="btn-primary" id="verifyBtn">
+                <div class="spinner" id="spinner"></div>
+                <span id="btnText">I've Verified My Email</span>
+            </button>
+
+            <button id="resendBtn" class="resend-link" disabled>Resend Link (Wait 15s)</button>
+
+            <div class="footer-actions">
+                Wrong email address? <a href="#" id="logoutBtn" class="footer-link">Log out</a>
+            </div>
+        </div>
+
+        <div class="nav-links-footer">
+            <a href="index.html">Home</a> &bull; 
+            <a href="auth-signin.html">Login</a> &bull; 
+            <a href="auth-signup.html">Register</a>
+        </div>
+    </div>
+
+    <!-- FIREBASE INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, sendEmailVerification, reload } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+
+        // Inline Firebase Configuration to prevent external import errors
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+            authDomain: "skilllink69-122aa.firebaseapp.com",
+            projectId: "skilllink69-122aa",
+            storageBucket: "skilllink69-122aa.firebasestorage.app",
+            messagingSenderId: "673456146518",
+            appId: "1:673456146518:web:1d09ea145a83e25ad213f7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firebaseAuth = getAuth(app);
+        const db = getFirestore(app);
+
+        const userEmailEl = document.getElementById('userEmail');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resendBtn = document.getElementById('resendBtn');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btnText');
+        const messageBox = document.getElementById('messageBox');
+        const msgText = document.getElementById('msgText');
+        const msgIcon = document.getElementById('msgIcon');
+
+        let currentUser = null;
+        let countdownInterval;
+        let secondsLeft = 15;
+        let userListenerUnsubscribe = null;
+
+        // Auto-fill from URL if provided (Temporary until Firebase loads)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('email')) {
+            userEmailEl.textContent = urlParams.get('email');
+        }
+
+        // Check Auth State
+        onAuthStateChanged(firebaseAuth, async (user) => {
+            if (user) {
+                // User IS logged in successfully
+                currentUser = user;
+                userEmailEl.textContent = user.email; // Override URL with guaranteed Auth email
+                
+                if (user.emailVerified) {
+                    await syncVerificationAndRoute(user.uid);
+                    return;
+                }
+
+                // Listen for manual DB verifications (e.g., admin approval)
+                const userRef = doc(db, "users", user.uid);
+                userListenerUnsubscribe = onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists() && docSnap.data().isVerified && !user.emailVerified) {
+                        routeUser(docSnap.data().role);
+                    }
+                });
+
+                // Auto-send verification on load and start timer
+                sendVerificationLink(user);
+                startResendTimer();
+            } else {
+                // User is NOT logged in.
+                if(userListenerUnsubscribe) userListenerUnsubscribe();
+                
+                if (urlParams.get('email')) {
+                    // They got here with an email in the URL, but lost their auth session
+                    showWarning("Authentication lost. Please log in to request a verification email.");
+                    btnText.textContent = "Go to Login";
+                    verifyBtn.addEventListener('click', () => {
+                        window.location.href = "auth-signin.html";
+                    });
+                } else {
+                    // Completely direct navigation, kick them out to login
+                    window.location.href = "auth-signin.html";
+                }
+            }
+        });
+
+        // Send Email Link
+        async function sendVerificationLink(user) {
+            try {
+                await sendEmailVerification(user);
+                showMessage("Verification email sent successfully! Please check your inbox.", true);
+            } catch (error) {
+                console.error("Error sending email:", error);
+                if(error.code === 'auth/too-many-requests') {
+                    showWarning("We recently sent an email. Please check your inbox or wait a moment before trying again.");
+                } else {
+                    showWarning("Could not send email. " + error.message);
+                }
+            }
+        }
+
+        // Manual Verify Button
+        verifyBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return; // Prevent action if not logged in
+
+            verifyBtn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.style.display = 'none';
+            messageBox.style.display = 'none';
+
+            try {
+                await reload(currentUser);
+                if (currentUser.emailVerified) {
+                    showMessage("Account verified successfully! Redirecting...", true);
+                    await syncVerificationAndRoute(currentUser.uid);
+                } else {
+                    showWarning("Your email is not verified yet. Please click the link in your inbox.");
+                    verifyBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    btnText.style.display = 'block';
+                }
+            } catch (error) {
+                showWarning("An error occurred checking your status. Please try again.");
+                verifyBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.style.display = 'block';
+            }
+        });
+
+        // Route after success
+        async function syncVerificationAndRoute(uid) {
+            try {
+                const userRef = doc(db, "users", uid);
+                await updateDoc(userRef, { isVerified: true });
+                const userSnap = await getDoc(userRef);
+                
+                setTimeout(() => { routeUser(userSnap.data()?.role); }, 1500);
+            } catch(error) {
+                setTimeout(() => { window.location.href = "index.html"; }, 2000);
+            }
+        }
+
+        function routeUser(role) {
+            if(userListenerUnsubscribe) userListenerUnsubscribe();
+            if (['admin', 'superadmin', 'employer'].includes(role)) {
+                window.location.href = "admin-dashboard.html";
+            } else {
+                window.location.href = "seeker-dashboard.html";
+            }
+        }
+
+        // Resend Timer Logic
+        function startResendTimer() {
+            resendBtn.disabled = true;
+            resendBtn.classList.remove('active');
+            secondsLeft = 15;
+            resendBtn.textContent = `Resend Link (Wait ${secondsLeft}s)`;
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                secondsLeft--;
+                resendBtn.textContent = `Resend Link (Wait ${secondsLeft}s)`;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    resendBtn.classList.add('active');
+                    resendBtn.textContent = "Didn't receive it? Resend Link";
+                }
+            }, 1000);
+        }
+
+        resendBtn.addEventListener('click', async () => {
+            if (currentUser && !resendBtn.disabled) {
+                await sendVerificationLink(currentUser);
+                startResendTimer();
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            if(userListenerUnsubscribe) userListenerUnsubscribe();
+            await signOut(firebaseAuth);
+            window.location.href = "auth-signin.html";
+        });
+
+        // UI Helpers
+        function showMessage(text, isSuccess) {
+            messageBox.style.display = 'flex';
+            messageBox.className = isSuccess ? 'msg-success' : 'msg-error';
+            msgIcon.innerHTML = isSuccess 
+                ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+                : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+            msgText.textContent = text;
+        }
+
+        function showWarning(text) {
+            messageBox.style.display = 'flex';
+            messageBox.className = 'msg-warning';
+            msgIcon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>';
+            msgText.textContent = text;
+        }
+    </script>
+</body>
+</html>

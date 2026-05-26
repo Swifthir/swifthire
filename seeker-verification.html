@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Secure Application | Swifthire</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ══════════════════════════════════════
+           DESIGN TOKENS (Swifthire)
+        ══════════════════════════════════════ */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg, #0000CC, #3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --warning-amber:  #F59E0B;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            --shadow-card:    0 10px 30px rgba(0,0,0,0.07);
+            --shadow-hover:   0 20px 50px rgba(0,0,204,0.14);
+            --transition:     all 0.3s cubic-bezier(0.4,0,0.2,1);
+            --radius-card:    22px;
+            --radius-btn:     30px;
+            --sidebar-w:      280px;
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-grey);
+            background: #F8FAFC;
+            background-image:
+                radial-gradient(at 0%   0%,   hsla(210,100%,95%,0.9) 0, transparent 50%),
+                radial-gradient(at 100% 100%,  hsla(160,100%,95%,0.7) 0, transparent 50%),
+                radial-gradient(at 50%  50%,   hsla(220,100%,97%,0.5) 0, transparent 60%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        /* ══════════════════════════════════════
+           SIDEBAR & HEADER
+        ══════════════════════════════════════ */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--white); box-shadow: 4px 0 24px rgba(0,0,0,0.06); z-index: 2000; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey); }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { padding: 28px 24px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); background: linear-gradient(135deg, #EFF6FF, #F8FAFC); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 38px; height: 38px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 34px; height: 34px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 0.9rem; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .sidebar-user { padding: 20px 24px; border-bottom: 1px solid var(--border-grey); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,204,0.25); }
+        .sidebar-user-info { flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-weight: 800; color: var(--text-dark); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+        .sidebar-user-badge { background: linear-gradient(135deg,#FEF3C7,#FDE68A); border: 1px solid #FCD34D; color: #92400E; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+
+        .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 2px; flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-left: 3px solid transparent; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); border-left-color: rgba(0,0,204,0.3); }
+        .sidebar-link.active { color: var(--primary-blue); background: linear-gradient(90deg, #EFF6FF, #F8FAFC); border-left-color: var(--primary-blue); font-weight: 700; }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-badge { margin-left: auto; background: var(--gradient-blue); color: var(--white); font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
+        .sidebar-section-label { padding: 14px 24px 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-grey); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 14px; color: var(--text-grey); font-family: var(--font-main); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
+        .sidebar-logout:hover { background: var(--danger-bg); color: var(--danger-red); border-color: #FECACA; }
+
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 14px 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 1px 0 var(--border-grey), 0 4px 20px rgba(0,0,0,0.04); transition: transform 0.3s ease; }
+        header.hidden { transform: translateY(-100%); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle-btn { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; display: none; align-items: center; justify-content: center; transition: var(--transition); }
+        .menu-toggle-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 38px; height: 38px; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); display: flex; align-items: center; justify-content: center; color: var(--text-grey); cursor: pointer; font-size: 1rem; transition: var(--transition); position: relative; text-decoration: none; }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); display: none; }
+        .header-avatar-btn { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 30px; cursor: pointer; transition: var(--transition); }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--white); }
+        .header-avatar-name { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+
+        /* ══════════════════════════════════════
+           APPLICATION LAYOUT
+        ══════════════════════════════════════ */
+        .dashboard-container {
+            margin-top: 72px;
+            padding: 40px 32px;
+            max-width: 1200px;
+            margin-left: auto; margin-right: auto;
+            width: 100%;
+        }
+        
+        .app-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ══════════════════════════════════════
+           PROGRESS STEPPER
+        ══════════════════════════════════════ */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 36px;
+            padding: 0 20px;
+        }
+        .stepper::before {
+            content: ''; position: absolute; top: 18px; left: 40px; right: 40px;
+            height: 3px; background: var(--border-grey); z-index: 1; border-radius: 10px;
+        }
+        .step-item {
+            display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 2;
+        }
+        .step-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1rem;
+            background: var(--bg-light-grey);
+            border: 3px solid var(--border-grey);
+            color: var(--text-grey);
+            transition: var(--transition);
+        }
+        .step-label {
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-grey); transition: var(--transition);
+        }
+
+        .step-item.completed .step-circle {
+            background: var(--success-green); border-color: var(--success-green); color: var(--white);
+        }
+        .step-item.completed .step-label { color: var(--dark-green); }
+
+        .step-item.active .step-circle {
+            background: #EFF6FF; border-color: var(--primary-blue); color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(0,0,204,0.1);
+        }
+        .step-item.active .step-label { color: var(--primary-blue); }
+
+        /* ══════════════════════════════════════
+           JOB CARD SUMMARY
+        ══════════════════════════════════════ */
+        .job-summary-card {
+            background: var(--white);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            display: flex; align-items: center; gap: 20px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-grey);
+            margin-bottom: 30px;
+            position: relative; overflow: hidden;
+        }
+        .job-summary-card::before {
+            content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 6px;
+            background: var(--gradient-blue);
+        }
+        .job-icon-box {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+            color: var(--primary-blue); font-size: 1.4rem;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; border: 1px solid #BFDBFE;
+        }
+        .job-summary-info { flex: 1; }
+        .job-title { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+        .job-company { font-size: 0.95rem; color: var(--primary-blue); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .job-meta { font-size: 0.9rem; color: var(--text-grey); font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .job-meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+        /* ══════════════════════════════════════
+           MAIN FORM CARD (MODERNIZED)
+        ══════════════════════════════════════ */
+        .content-card {
+            background: var(--white);
+            border-radius: var(--radius-card);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-grey);
+        }
+
+        .form-group { margin-bottom: 24px; position: relative; }
+        .form-group label {
+            display: block; font-size: 0.85rem; font-weight: 700;
+            color: var(--text-dark); margin-bottom: 8px;
+        }
+        
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-icon { 
+            position: absolute; left: 16px; color: #9CA3AF; 
+            font-size: 1rem; z-index: 2; pointer-events: none; 
+            transition: var(--transition); 
+        }
+        
+        .form-input, .form-select {
+            width: 100%; padding: 15px 16px 15px 46px; /* Space for icon */
+            border: 2px solid var(--border-grey);
+            border-radius: 14px;
+            font-size: 0.95rem; font-weight: 500; font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg-light-grey); color: var(--text-dark);
+            appearance: none; -webkit-appearance: none;
+        }
+        
+        /* Textarea doesn't need the left padding for an icon */
+        .form-textarea {
+            width: 100%; padding: 16px;
+            border: 2px solid var(--border-grey);
+            border-radius: 14px;
+            font-size: 0.95rem; font-weight: 500; font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg-light-grey); color: var(--text-dark);
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: var(--bright-blue); background: var(--white);
+            box-shadow: 0 0 0 4px rgba(59,91,251,0.08);
+        }
+        
+        .form-input:focus ~ .input-icon, .form-select:focus ~ .input-icon { 
+            color: var(--primary-blue); 
+        }
+
+        /* Custom Dropdown Arrow */
+        .select-wrapper::after {
+            content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 18px; color: #9CA3AF; pointer-events: none;
+            transition: var(--transition);
+        }
+        .form-select:focus + .input-icon, .form-select:focus ~ .select-wrapper::after {
+            color: var(--primary-blue);
+        }
+
+        /* ══════════════════════════════════════
+           TIER SELECTION & VERIFICATION
+        ══════════════════════════════════════ */
+        .mpesa-header { text-align: center; margin-bottom: 24px; }
+        .mpesa-logo { height: 50px; margin-bottom: 12px; }
+        .fee-text { color: var(--text-dark); font-size: 1.05rem; font-weight: 800; text-align: center; margin-bottom: 20px; }
+
+        .tier-selection { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; }
+        .tier-card {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 22px 24px; border: 2px solid var(--border-grey);
+            border-radius: 18px; cursor: pointer; transition: var(--transition);
+            background: var(--bg-light-grey); position: relative; overflow: hidden;
+        }
+        .tier-card input[type="radio"] { display: none; }
+        .tier-card.selected {
+            border-color: var(--primary-blue); background: #EFF6FF;
+            box-shadow: 0 8px 24px rgba(0,0,204,0.08);
+        }
+        .tier-card.selected::before {
+            content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; top: 22px; right: 24px;
+            color: var(--primary-blue); font-size: 1.4rem;
+        }
+
+        .tier-info h4 { color: var(--text-dark); font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+        .tier-card.selected .tier-info h4 { color: var(--primary-blue); }
+        .tier-info p { font-size: 0.85rem; color: var(--text-grey); font-weight: 600; margin: 0; line-height: 1.4; }
+        .tier-price { font-size: 1.4rem; font-weight: 800; color: var(--dark-green); padding-left: 20px; margin-right: 30px; }
+
+        .till-box {
+            background: linear-gradient(135deg, #FAFBFF, #F8FAFC);
+            padding: 20px; border-radius: 16px; text-align: center;
+            margin: 0 auto 30px; max-width: 280px;
+            border: 2px dashed #BFDBFE;
+        }
+        .till-label { color: var(--text-grey); font-weight: 800; font-size: 0.85rem; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .till-number { color: var(--primary-blue); font-size: 2rem; font-weight: 800; letter-spacing: 3px; }
+
+        .code-input {
+            text-align: center; font-size: 1.3rem; letter-spacing: 4px; font-weight: 800;
+            text-transform: uppercase; background: var(--bg-light-grey);
+            padding-left: 16px !important; /* Override icon padding for this specific input */
+        }
+        .code-input::placeholder { letter-spacing: 1px; font-weight: 600; color: #9CA3AF; }
+        .secure-label { text-align: center; color: var(--success-green); font-size: 0.85rem; margin-top: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        /* ══════════════════════════════════════
+           BUTTONS & ACTIONS
+        ══════════════════════════════════════ */
+        .action-bar { display: flex; gap: 16px; margin-top: 40px; }
+        .btn {
+            flex: 1; padding: 16px 24px; border-radius: var(--radius-btn);
+            font-size: 1rem; font-weight: 800; cursor: pointer; text-align: center;
+            border: none; transition: var(--transition); font-family: inherit;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--gradient-blue); color: var(--white); box-shadow: 0 4px 18px rgba(0,0,204,0.25); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,204,0.35); }
+        .btn-primary:disabled { background: #9CA3AF; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .btn-secondary { background: var(--white); border: 2px solid var(--border-grey); color: var(--text-grey); }
+        .btn-secondary:hover { background: var(--bg-light-grey); color: var(--text-dark); border-color: #D1D5DB; }
+
+        /* ══════════════════════════════════════
+           SUCCESS SECTION
+        ══════════════════════════════════════ */
+        .success-box { text-align: center; padding: 20px 10px; }
+        .success-icon {
+            width: 100px; height: 100px; background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+            color: var(--white); font-size: 3.5rem; margin-bottom: 25px;
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .success-title { font-family: var(--font-serif); color: var(--text-dark); font-size: 2rem; font-weight: 800; margin-bottom: 16px; }
+        .success-text { color: var(--text-grey); font-size: 1.05rem; line-height: 1.6; margin-bottom: 40px; font-weight: 500; }
+
+        .hidden { display: none !important; }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (min-width: 1024px) {
+            .menu-toggle-btn { display: none !important; }
+            .sidebar { transform: translateX(0); box-shadow: none; }
+            header, .dashboard-container { margin-left: var(--sidebar-w); }
+            header { width: calc(100% - var(--sidebar-w)); left: var(--sidebar-w); }
+            .sidebar-header .close-sidebar { display: none; }
+            .sidebar-overlay { display: none !important; }
+            header .logo-container { display: none; }
+        }
+        @media (max-width: 1023px) {
+            .menu-toggle-btn { display: flex !important; }
+            .dashboard-container { padding: 24px 20px 40px; }
+            .content-card { padding: 28px 24px; }
+        }
+        @media (max-width: 600px) {
+            .action-bar { flex-direction: column-reverse; }
+            .btn { width: 100%; }
+            .tier-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .tier-price { padding-left: 0; margin-top: 10px; }
+            .tier-card.selected::before { top: 20px; right: 20px; }
+            .job-summary-card { flex-direction: column; text-align: center; }
+            .job-meta { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="seeker-dashboard.html" class="sidebar-logo">
+                <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="sidebar-brand">Swifthire</span>
+            </a>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+                <div class="sidebar-user-role">Job Seeker</div>
+            </div>
+            <span class="sidebar-user-badge">Free</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Main Menu</span>
+            <a href="seeker-dashboard.html" class="sidebar-link">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="seeker-profile.html" class="sidebar-link">
+                <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="seeker-browse-jobs.html" class="sidebar-link active">
+                <i class="fas fa-search"></i> Browse Jobs
+            </a>
+            <a href="seeker-job-detail.html" class="sidebar-link">
+                <i class="fas fa-file-alt"></i> Job Detail
+            </a>
+            <a href="seeker-saved-jobs.html" class="sidebar-link">
+                <i class="fas fa-bookmark"></i> Saved Jobs
+            </a>
+            <a href="seeker-applications.html" class="sidebar-link">
+                <i class="fas fa-folder-open"></i> My Applications
+                <span class="sidebar-badge" id="sidebarAppCount">0</span>
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Communication & Support</span>
+            <a href="seeker-messages.html" class="sidebar-link">
+                <i class="fas fa-envelope"></i> Messages
+                <span class="sidebar-badge" id="sidebarMsgCount" style="display:none;">0</span>
+            </a>
+            <a href="seeker-contact.html" class="sidebar-link">
+                <i class="fas fa-address-book"></i> Contact
+            </a>
+            <a href="seeker-help.html" class="sidebar-link">
+                <i class="fas fa-question-circle"></i> Help
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Account</span>
+            <a href="seeker-settings.html" class="sidebar-link">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-logout logout-action">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="header-left">
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="seeker-dashboard.html" class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">Swifthire</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="seeker-browse-jobs.html" class="header-icon-btn" title="Browse Jobs">
+                <i class="fas fa-search"></i>
+            </a>
+            <div class="header-avatar-btn" onclick="window.location='seeker-profile.html'">
+                <div class="header-avatar" id="headerAvatarInit">U</div>
+                <span class="header-avatar-name" id="headerName">User</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="dashboard-container">
+        <div class="app-container">
+            
+            <!-- Progress Stepper -->
+            <div class="stepper">
+                <div class="step-item active" id="indicator-step1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Details</div>
+                </div>
+                <div class="step-item" id="indicator-step2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Verify</div>
+                </div>
+                <div class="step-item" id="indicator-step3">
+                    <div class="step-circle"><i class="fas fa-check"></i></div>
+                    <div class="step-label">Done</div>
+                </div>
+            </div>
+
+            <!-- Job Card Context -->
+            <div class="job-summary-card">
+                <div class="job-icon-box">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="job-summary-info">
+                    <h2 class="job-title" id="displayJobTitle">Loading Job Details...</h2>
+                    <div class="job-company" id="displayJobCompany"><i class="fas fa-building"></i> Loading Company...</div>
+                    <div class="job-meta">
+                        <span id="jobSalary" style="color:var(--success-green);"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-card">
+                
+                <!-- ================= STEP 1: DETAILS ================= -->
+                <div id="section-details">
+                    <form id="detailsForm">
+                        
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="fullName" class="form-input" placeholder="Enter your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone input-icon"></i>
+                                <input type="tel" id="phone" class="form-input" placeholder="e.g. +254 700 000000" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Current Location</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-map-marker-alt input-icon"></i>
+                                <input type="text" id="location" class="form-input" placeholder="City or Region" required>
+                            </div>
+                        </div>
+
+                        <!-- Age and Experience stacked vertically for better spacing -->
+                        <div class="form-group">
+                            <label>Age</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-alt input-icon"></i>
+                                <input type="number" id="age" class="form-input" placeholder="e.g. 28" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Experience (Yrs)</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-briefcase input-icon"></i>
+                                <input type="number" id="experience" class="form-input" placeholder="e.g. 3" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Highest Education</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-graduation-cap input-icon"></i>
+                                <select id="education" class="form-select" required>
+                                    <option value="">Select Qualification</option>
+                                    <option value="High School">High School / Secondary</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Degree">Bachelor's Degree</option>
+                                    <option value="Masters">Master's Degree</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cover Note (Pitch)</label>
+                            <textarea id="coverLetter" class="form-textarea" rows="4" placeholder="Briefly state why you are the perfect fit for this role..." required></textarea>
+                        </div>
+
+                        <div class="action-bar">
+                            <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="btn-proceed">Review & Verify <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ================= STEP 2: VERIFY ================= -->
+                <div id="section-verify" class="hidden">
+                    
+                    <div class="mpesa-header">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/1200px-M-PESA_LOGO-01.svg.png" alt="M-PESA" class="mpesa-logo">
+                    </div>
+
+                    <p class="fee-text" id="feeTextDisplay">Select Application Processing Tier</p>
+                    
+                    <div class="tier-selection">
+                        <!-- Standard Tier -->
+                        <label class="tier-card selected" id="tier-standard-card">
+                            <input type="radio" name="paymentTier" value="Standard" checked onchange="selectTier('Standard')">
+                            <div class="tier-info">
+                                <h4>Standard Review</h4>
+                                <p>Regular profile processing queue</p>
+                            </div>
+                            <div class="tier-price" id="feeStandardDisplay">Ksh 300</div>
+                        </label>
+
+                        <!-- Premium Tier -->
+                        <label class="tier-card" id="tier-premium-card">
+                            <input type="radio" name="paymentTier" value="Premium" onchange="selectTier('Premium')">
+                            <div class="tier-info">
+                                <h4>Premium Track</h4>
+                                <p>Priority listing & fast-tracked review</p>
+                            </div>
+                            <div class="tier-price" id="feePremiumDisplay">Ksh 800</div>
+                        </label>
+                    </div>
+
+                    <div class="till-box">
+                        <span class="till-label">Buy Goods Till Number</span>
+                        <span class="till-number" id="tillNumberDisplay">3240117</span>
+                    </div>
+
+                    <div class="form-group" style="max-width: 400px; margin: 0 auto;">
+                        <label style="text-align: center;">M-Pesa Transaction Code</label>
+                        <input type="text" id="mpesaCode" class="form-input code-input" placeholder="QKH1234567" maxlength="10">
+                        <div class="secure-label"><i class="fas fa-shield-alt"></i> Secured by Swifthire Pay</div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button type="button" class="btn btn-secondary" id="btn-edit"><i class="fas fa-arrow-left"></i> Back to Details</button>
+                        <button type="button" class="btn btn-primary" id="btn-submit">Submit Application <i class="fas fa-check-circle"></i></button>
+                    </div>
+                </div>
+
+                <!-- ================= STEP 3: DONE ================= -->
+                <div id="section-done" class="hidden">
+                    <div class="success-box">
+                        <div class="success-icon"><i class="fas fa-check"></i></div>
+                        <h2 class="success-title">Application Sent!</h2>
+                        <p class="success-text">
+                            Your application for <strong id="successJobTitle" style="color:var(--primary-blue);">the selected role</strong> has been successfully submitted via Swifthire.
+                        </p>
+                        <div class="action-bar" style="justify-content: center;">
+                            <a href="seeker-applications.html" class="btn btn-primary" style="max-width: 300px;">View My Applications</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Logic Scripts -->
+    <script>
+        // Sidebar Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            var menuBtn = document.getElementById('menuToggleBtn');
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            var closeBtn = document.getElementById('closeSidebar');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            }
+            if(menuBtn) menuBtn.addEventListener('click', toggleSidebar);
+            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if(overlay) overlay.addEventListener('click', toggleSidebar);
+        });
+
+        // Tier Selection Logic
+        let currentTier = "Standard"; 
+        function selectTier(tierName) {
+            currentTier = tierName;
+            document.getElementById('tier-standard-card').classList.remove('selected');
+            document.getElementById('tier-premium-card').classList.remove('selected');
+            
+            if (tierName === 'Standard') {
+                document.getElementById('tier-standard-card').classList.add('selected');
+            } else if (tierName === 'Premium') {
+                document.getElementById('tier-premium-card').classList.add('selected');
+            }
+        }
+        window.selectTier = selectTier;
+
+        // Step Navigation Logic
+        const sectionDetails = document.getElementById('section-details');
+        const sectionVerify = document.getElementById('section-verify');
+        const sectionDone = document.getElementById('section-done');
+        
+        const indStep1 = document.getElementById('indicator-step1');
+        const indStep2 = document.getElementById('indicator-step2');
+        const indStep3 = document.getElementById('indicator-step3');
+        
+        const btnProceed = document.getElementById('btn-proceed');
+        const btnEdit = document.getElementById('btn-edit');
+        const btnSubmit = document.getElementById('btn-submit');
+        const detailsForm = document.getElementById('detailsForm');
+        
+        btnProceed.addEventListener('click', function() {
+            if (!detailsForm.checkValidity()) {
+                detailsForm.reportValidity(); 
+                return;
+            }
+            sectionDetails.classList.add('hidden');
+            sectionVerify.classList.remove('hidden');
+
+            indStep1.classList.remove('active');
+            indStep1.classList.add('completed');
+            indStep2.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        btnEdit.addEventListener('click', function() {
+            sectionVerify.classList.add('hidden');
+            sectionDetails.classList.remove('hidden');
+
+            indStep2.classList.remove('active');
+            indStep1.classList.remove('completed');
+            indStep1.classList.add('active');
+        });
+    </script>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+            authDomain: "skilllink69-122aa.firebaseapp.com",
+            projectId: "skilllink69-122aa",
+            storageBucket: "skilllink69-122aa.firebasestorage.app",
+            messagingSenderId: "673456146518",
+            appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+            measurementId: "G-H69LL8HKYQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firebaseAuth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let jobData = null;
+
+        // Get Job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(firebaseAuth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    await loadUserProfile(user);
+                    
+                    setupRealtimeListeners(user.uid);
+                    
+                    if (!jobId) {
+                        alert("No job selected. Redirecting to jobs board.");
+                        window.location.href = 'seeker-browse-jobs.html';
+                        return;
+                    }
+                    
+                    await loadJobDetails();
+                    listenToPaymentSettings();
+                } else {
+                    sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                    window.location.href = 'index.html';
+                }
+            });
+
+            // Logout Logic
+            document.querySelectorAll('.logout-action').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    signOut(firebaseAuth).then(() => window.location.href = 'index.html');
+                });
+            });
+        });
+
+        async function loadUserProfile(user) {
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                let fullName = user.displayName || "Job Seeker";
+
+                if (userDocSnap.exists()) {
+                    const profile = userDocSnap.data();
+                    fullName = profile.fullName || profile.name || fullName;
+                    
+                    // Prefill form
+                    if(profile.fullName) document.getElementById('fullName').value = profile.fullName;
+                    if(profile.phone) document.getElementById('phone').value = profile.phone;
+                    if(profile.location) document.getElementById('location').value = profile.location;
+                    if(profile.age) document.getElementById('age').value = profile.age;
+                    if(profile.experience) document.getElementById('experience').value = profile.experience;
+                    if(profile.education) document.getElementById('education').value = profile.education;
+                }
+
+                // Initials
+                const parts = fullName.trim().split(" ");
+                let initials = "U";
+                if(parts.length > 1) initials = parts[0][0].toUpperCase() + parts[parts.length-1][0].toUpperCase();
+                else if(parts[0]) initials = parts[0][0].toUpperCase();
+
+                // Update UI
+                document.getElementById("sidebarName").textContent = fullName;
+                document.getElementById("headerName").textContent = parts[0];
+                document.getElementById("sidebarAvatarInit").textContent = initials;
+                document.getElementById("headerAvatarInit").textContent = initials;
+            } catch(e) {
+                console.error("Error loading profile", e);
+            }
+        }
+
+        function setupRealtimeListeners(uid) {
+            // Listen for Applications Count to update Sidebar
+            const appsQuery = query(collection(db, "applications"), where("userId", "==", uid));
+            onSnapshot(appsQuery, (snap) => {
+                const badge = document.getElementById('sidebarAppCount');
+                if (badge) badge.textContent = snap.size;
+            }, (error) => {
+                console.error("Applications Error:", error);
+                showIndexError(error);
+            });
+
+            // Listen for Messages Count to update Sidebar
+            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
+            onSnapshot(chatsQuery, (snap) => {
+                let unread = 0;
+                snap.forEach(d => {
+                    if(d.data().unreadCount_seeker > 0) unread++;
+                });
+                const badge = document.getElementById('sidebarMsgCount');
+                const notifDot = document.getElementById('headerNotifDot');
+                if(badge) {
+                    badge.textContent = unread;
+                    badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+                }
+                if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+            }, (error) => {
+                console.error("Chats Error:", error);
+                showIndexError(error);
+            });
+        }
+
+        function showIndexError(error) {
+            if(error.message && error.message.includes("requires an index")) {
+                const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+                if(linkMatch) {
+                    document.body.innerHTML += `
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                        <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                        <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                    </div>`;
+                }
+            }
+        }
+
+        async function loadJobDetails() {
+            try {
+                const jobRef = doc(db, "jobs", jobId);
+                const jobSnap = await getDoc(jobRef);
+                if (jobSnap.exists()) {
+                    jobData = jobSnap.data();
+                    const title = jobData.title || 'Untitled Role';
+                    const company = jobData.company || 'Confidential Company';
+                    
+                    document.getElementById('displayJobTitle').textContent = title;
+                    document.getElementById('successJobTitle').textContent = title;
+                    document.getElementById('displayJobCompany').innerHTML = `<i class="fas fa-building"></i> ${company}`;
+                    
+                    if (jobData.salary && (jobData.salary.min || jobData.salary.max)) {
+                        let salaryStr = `Ksh ${jobData.salary.min || 0} - Ksh ${jobData.salary.max || 'Above'}`;
+                        document.getElementById('jobSalary').innerHTML = `<i class="fas fa-money-bill-wave"></i> ${salaryStr}`;
+                    } else if (typeof jobData.salary === 'string') {
+                        document.getElementById('jobSalary').innerHTML = `<i class="fas fa-money-bill-wave"></i> ${jobData.salary}`;
+                    }
+                } else {
+                    alert("Job no longer available.");
+                    window.location.href = 'seeker-browse-jobs.html';
+                }
+            } catch(error) {                
+                console.error("Error loading job details", error);
+                document.getElementById('displayJobTitle').textContent = 'Error Loading Job';
+                document.getElementById('displayJobCompany').textContent = '';
+            }
+        }
+
+        function listenToPaymentSettings() {
+            const docRef = doc(db, "settings", "payment");
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (data.feeStandard) {
+                        document.getElementById('feeStandardDisplay').textContent = `Ksh ${data.feeStandard}`;
+                    }
+                    if (data.feePremium) {
+                        document.getElementById('feePremiumDisplay').textContent = `Ksh ${data.feePremium}`;
+                    }
+                    if (data.tillNumber) {
+                        document.getElementById('tillNumberDisplay').textContent = data.tillNumber;
+                    }
+                    if (data.feeText) {
+                        document.getElementById('feeTextDisplay').textContent = data.feeText;
+                    }
+                }
+            }, (error) => {
+                console.error("Error listening to payment settings:", error);
+                showIndexError(error);
+            });
+        }
+
+        const mpesaCodeInput = document.getElementById('mpesaCode');
+
+        document.getElementById('btn-submit').addEventListener('click', async function() {
+            const btnSubmit = this;
+            const code = mpesaCodeInput.value.trim().toUpperCase();
+            
+            if(code.length < 8) {
+                alert("Please enter a valid M-Pesa Transaction Code.");
+                mpesaCodeInput.focus();
+                return;
+            }
+
+            // Show loading state
+            const originalText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btnSubmit.disabled = true;
+
+            try {
+                // Compile Form Data
+                const appData = {
+                    jobId: jobId,
+                    jobTitle: jobData.title || 'Untitled Role',
+                    company: jobData.company || 'Confidential Company',
+                    userId: currentUser.uid,
+                    applicantName: document.getElementById('fullName').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    location: document.getElementById('location').value.trim(),
+                    age: document.getElementById('age').value,
+                    education: document.getElementById('education').value,
+                    experience: document.getElementById('experience').value.trim(),
+                    coverLetter: document.getElementById('coverLetter').value.trim(),
+                    tier: currentTier, // "Standard" or "Premium"
+                    mpesaCode: code,
+                    status: 'pending',
+                    paymentStatus: 'pending',
+                    appliedDate: serverTimestamp(),
+                    viewedByAdmin: false
+                };
+
+                // Save to Firestore 'applications' collection
+                await addDoc(collection(db, "applications"), appData);
+
+                // UI Updates for Success
+                document.getElementById('section-verify').classList.add('hidden');
+                document.getElementById('section-done').classList.remove('hidden');
+
+                document.getElementById('indicator-step2').classList.remove('active');
+                document.getElementById('indicator-step2').classList.add('completed');
+                document.getElementById('indicator-step3').classList.add('completed');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error("Application Submission Error: ", error);
+                alert("An error occurred while submitting your application. Please try again.");
+                btnSubmit.innerHTML = originalText;
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

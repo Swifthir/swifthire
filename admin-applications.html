@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">Manage Applications | Swifthire Admin</title>
+  
+  <meta name="description" content="Manage Applications - Swifthire Admin">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <!-- jsPDF for Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* ── EXACT SWIFTHIRE VARIABLES ── */
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --dark-green: #047857; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --shadow-hover: 0 20px 40px rgba(0,0,0,0.08);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        
+        /* Application Status Colors */
+        --st-received-bg: #F3F4F6; --st-received-txt: #4B5563;
+        --st-review-bg: #EFF6FF; --st-review-txt: #1D4ED8;
+        --st-verified-bg: #ECFDF5; --st-verified-txt: #047857;
+        --st-short-bg: #FEF3C7; --st-short-txt: #B45309;
+        --st-hired-bg: var(--primary-blue); --st-hired-txt: #FFFFFF;
+        --st-danger-bg: #FEE2E2; --st-danger-txt: #B91C1C;
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-x: hidden; 
+        padding-bottom: 40px; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: transform 0.3s ease, width 0.3s, left 0.3s; 
+    }
+    header.hidden { transform: translateY(-100%); }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; min-width: 44px; min-height: 44px; }
+    
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+    .header-user-info { display:flex; flex-direction:column; text-align:right; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px; background: var(--gradient-blue); 
+        color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { 
+        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; 
+        color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; 
+    }
+    .sidebar-link { 
+        display: flex; align-items: center; gap: 14px; padding: 13px 20px; 
+        color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; 
+        transition: var(--transition); border-right: 4px solid transparent; 
+        margin: 0 8px; border-radius: 12px; 
+    }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+    .sidebar-badge { 
+        margin-left: auto; background: var(--danger-red); color: white; 
+        font-size: 0.65rem; font-weight: 800; padding: 2px 7px; 
+        border-radius: 20px; min-width: 20px; text-align: center; 
+    }
+
+    /* ── LAYOUT ── */
+    .dashboard-container { 
+        margin-top: 80px; padding: 20px; width: 100%; 
+        max-width: 1400px; transition: var(--transition); margin-left: 0; 
+    }
+
+    /* ── HERO BANNER ── */
+    .hero-banner { 
+        background: var(--gradient-blue); border-radius: 24px; 
+        padding: 28px 30px; margin-bottom: 28px; 
+        position: relative; overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,204,0.25); 
+        display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;
+    }
+    .hero-banner::before { 
+        content: ''; position: absolute; top: -40px; right: -40px; 
+        width: 200px; height: 200px; background: rgba(255,255,255,0.06); border-radius: 50%; 
+    }
+    .hero-banner::after { 
+        content: ''; position: absolute; bottom: -60px; right: 100px; 
+        width: 150px; height: 150px; background: rgba(255,255,255,0.04); border-radius: 50%; 
+    }
+    .hero-content { position: relative; z-index: 1; flex: 1; }
+    .hero-title { 
+        font-family: var(--font-serif); font-size: 2rem; 
+        color: white; margin-bottom: 6px; line-height: 1.2; 
+    }
+    .hero-subtitle { color: rgba(255,255,255,0.8); font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 16px; }
+    .hero-meta-item { display: flex; align-items: center; gap: 8px; }
+    .hero-meta-item i { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .hero-meta-item span { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 600; }
+    .hero-meta-value { color: white; font-weight: 800; }
+    .hero-actions { position: relative; z-index: 1; }
+
+    /* ── BUTTONS ── */
+    .btn-primary { 
+        background: var(--white); color: var(--primary-blue); border: none; 
+        padding: 12px 24px; border-radius: 30px; font-weight: 800; font-size: 0.9rem; 
+        cursor: pointer; transition: var(--transition); font-family: var(--font-main); 
+        display: inline-flex; align-items: center; gap: 8px; text-decoration: none; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    .btn-view { 
+        background: #EFF6FF; color: var(--primary-blue); padding: 10px 18px; 
+        border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; 
+        border: none; display: flex; align-items: center; gap: 6px; transition: var(--transition); 
+    }
+    .btn-view:hover { background: var(--primary-blue); color: var(--white); }
+
+    /* ── SEARCH & FILTER ── */
+    .search-filter-bar { 
+        background: var(--white); padding: 16px; border-radius: 16px; 
+        box-shadow: var(--shadow-card); margin-bottom: 25px; 
+        display: flex; gap: 15px; flex-wrap: wrap; border: 1px solid var(--border-grey); 
+    }
+    .search-input-wrap { flex: 1; min-width: 250px; position: relative; }
+    .search-input-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-grey); font-size: 0.9rem; pointer-events: none; }
+    .filter-input { 
+        width: 100%; padding: 12px 20px 12px 42px; 
+        border: 2px solid var(--border-grey); border-radius: 12px; 
+        font-size: 0.95rem; font-family: var(--font-main); outline: none; 
+        transition: var(--transition); background: #F9FAFB; font-weight: 500; 
+    }
+    .filter-input:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 4px #EFF6FF; }
+    .filter-select { 
+        padding: 12px 42px 12px 18px; border: 2px solid var(--border-grey); 
+        border-radius: 12px; font-size: 0.95rem; font-weight: 600; color: var(--text-dark); 
+        background: #F9FAFB; cursor: pointer; transition: var(--transition); 
+        min-width: 180px; outline: none; font-family: var(--font-main); appearance: none; 
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%236B7280" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); 
+        background-repeat: no-repeat; background-position: right 14px center; 
+    }
+    .filter-select:focus { border-color: var(--bright-blue); background: var(--white); }
+
+    /* ── APPS GRID ── */
+    .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+    .app-card { 
+        background: var(--white); border-radius: 20px; padding: 24px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        display: flex; flex-direction: column; position: relative; transition: var(--transition); 
+    }
+    .app-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: #BFDBFE; }
+    .c-head { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
+    .c-name { font-size: 1.15rem; font-weight: 800; color: var(--text-dark); }
+    .c-date { font-size: 0.8rem; color: #9CA3AF; font-weight: 600; }
+    .c-job { font-size: 0.9rem; color: var(--primary-blue); font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .st-badge { 
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
+        padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; 
+        text-transform: uppercase; letter-spacing: 0.05em; width: fit-content; margin-bottom: 20px;
+    }
+    .st-Received, .st-Pending { background: var(--st-received-bg); color: var(--st-received-txt); }
+    .st-UnderReview { background: var(--st-review-bg); color: var(--st-review-txt); }
+    .st-Verified { background: var(--st-verified-bg); color: var(--st-verified-txt); }
+    .st-Shortlisted { background: var(--st-short-bg); color: var(--st-short-txt); }
+    .st-Hired { background: var(--st-hired-bg); color: var(--st-hired-txt); }
+    .st-Rejected { background: var(--st-danger-bg); color: var(--st-danger-txt); }
+    
+    .c-foot { 
+        margin-top: auto; padding-top: 16px; border-top: 1px solid var(--bg-light-grey); 
+        display: flex; justify-content: space-between; align-items: center; 
+    }
+    .code-txt { font-family: monospace; font-weight: 800; color: var(--text-grey); background: #F3F4F6; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; border: 1px solid var(--border-grey); }
+
+    /* ── MODAL ── */
+    .modal-bg { 
+        position: fixed; inset: 0; background: rgba(31, 41, 55, 0.6); backdrop-filter: blur(4px); 
+        z-index: 3000; display: none; align-items: center; justify-content: center; 
+        padding: 20px; opacity: 0; transition: opacity 0.3s ease; 
+    }
+    .modal-bg.show { display: flex; opacity: 1; }
+    .modal-main { 
+        background: var(--white); width: 100%; max-width: 650px; 
+        border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+        overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; 
+        transform: translateY(20px); transition: transform 0.3s ease; 
+    }
+    .modal-bg.show .modal-main { transform: translateY(0); }
+    .m-head { padding: 24px 30px; border-bottom: 1px solid var(--border-grey); display: flex; justify-content: space-between; align-items: center; }
+    .m-title { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); font-family: var(--font-serif); }
+    .m-close { background: var(--bg-light-grey); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; color: var(--text-grey); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+    .m-close:hover { color: var(--danger-red); background: var(--danger-bg); }
+    .m-body { padding: 0; overflow-y: auto; flex: 1; }
+    .info-sec { padding: 24px 30px; border-bottom: 1px solid var(--border-grey); }
+    .sec-lbl { font-size: 0.8rem; text-transform: uppercase; color: var(--primary-blue); font-weight: 800; margin-bottom: 16px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
+    .data-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .d-itm label { display: block; font-size: 0.75rem; color: var(--text-grey); margin-bottom: 4px; font-weight: 700; text-transform: uppercase; }
+    .d-itm p { font-size: 0.95rem; color: var(--text-dark); font-weight: 600; word-break: break-word; line-height: 1.4; }
+    .d-itm a { color: var(--primary-blue); text-decoration: none; font-weight: 600; word-break: break-all; }
+    .d-itm a:hover { text-decoration: underline; }
+    
+    .m-actions { background: #F8FAFC; padding: 24px 30px; border-top: 1px solid var(--border-grey); }
+    .act-lbl { text-align: center; font-size: 0.85rem; color: var(--text-grey); margin-bottom: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .wf-container { display: flex; flex-direction: column; gap: 12px; }
+    .wf-btn { padding: 14px; border-radius: 12px; border: 1px solid var(--border-grey); background: var(--white); color: var(--text-dark); font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: var(--transition); font-size: 0.95rem; font-family: inherit; }
+    .wf-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .btn-start-review { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+    .btn-verify { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+    .btn-shortlist { background: #FEF3C7; color: #B45309; border-color: #FDE68A; }
+    .btn-hire { background: var(--gradient-blue); color: white; border: none; }
+    .btn-reject { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; margin-top: 16px; }
+
+    .reject-box { display: none; margin-top: 16px; animation: fadeIn 0.3s; background: var(--white); padding: 20px; border-radius: 16px; border: 1px dashed #FECACA; box-shadow: var(--shadow-sm); }
+    .reject-box.show { display: block; }
+    .rj-inp { width: 100%; padding: 12px 16px; border: 2px solid var(--border-grey); border-radius: 12px; margin-bottom: 16px; font-family: inherit; resize: vertical; outline: none; font-size: 0.9rem; }
+    .rj-inp:focus { border-color: var(--danger-red); }
+    .rj-send { width: 100%; background: var(--danger-red); color: white; padding: 14px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+    .rj-send:hover { background: #991B1B; }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 24px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: var(--white); border-radius: 14px; padding: 14px 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); border-left: 4px solid var(--primary-blue); display: flex; align-items: center; gap: 12px; min-width: 260px; animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    .toast.success { border-left-color: var(--success-green); }
+    @keyframes toastIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .toast-msg  { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); flex: 1; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── RESPONSIVE ── */
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .dashboard-container { margin-left: 280px; width: calc(100% - 280px); padding: 30px 40px; }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+    }
+    @media(max-width: 600px) { 
+        .data-row { grid-template-columns: 1fr; } 
+        .hero-banner { flex-direction: column; align-items: flex-start; }
+        .btn-primary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="admin-dashboard.html" style="text-decoration: none;">
+          <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      </a>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="navAvatarInit">A</div>
+      <div>
+        <div class="sidebar-profile-name" id="navName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link"><i class="fas fa-briefcase"></i> Job Management</a>
+      <a href="admin-applications.html" class="sidebar-link active">
+        <i class="fas fa-folder-open"></i> Applications
+        <span class="sidebar-badge" id="navBadge">0</span>
+      </a>
+      <a href="admin-user-directory.html" class="sidebar-link"><i class="fas fa-users"></i> User Directory</a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link"><i class="fas fa-list-alt"></i> Logs</a>
+      <a href="admin-reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> Reports</a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link"><i class="fas fa-headset"></i> Support</a>
+      <a href="admin-system-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-right" style="gap:12px;">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-container">
+    
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-content">
+        <h1 class="hero-title">Applications</h1>
+        <p class="hero-subtitle">Review candidates, verify payments, and manage hiring workflow.</p>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <i class="fas fa-folder-open"></i>
+            <span><span class="hero-meta-value" id="statTotal">0</span> Total</span>
+          </div>
+          <div class="hero-meta-item">
+            <i class="fas fa-clock"></i>
+            <span><span class="hero-meta-value" id="statPending">0</span> Pending</span>
+          </div>
+          <div class="hero-meta-item">
+            <i class="fas fa-star"></i>
+            <span><span class="hero-meta-value" id="statShortlisted">0</span> Shortlisted</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="window.generateReport()">
+          <i class="fas fa-file-pdf"></i> Export Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="search-filter-bar">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="inpSearch" class="filter-input" placeholder="Search applicant name, job title, or code...">
+      </div>
+      <select id="selFilter" class="filter-select">
+        <option value="All">All Statuses</option>
+        <option value="Received">Received / Pending</option>
+        <option value="Under Review">Under Review</option>
+        <option value="Verified">Verified</option>
+        <option value="Shortlisted">Shortlisted</option>
+        <option value="Hired">Hired</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+
+    <!-- Applications Grid -->
+    <div id="gridApps" class="apps-grid">
+      <!-- Populated via JS -->
+    </div>
+
+  </main>
+
+  <!-- VIEW & MANAGE MODAL -->
+  <div id="detailModal" class="modal-bg">
+    <div class="modal-main">
+      <div class="m-head">
+        <div class="m-title">Application Details</div>
+        <button class="m-close" onclick="window.closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="m-body">
+        <div class="info-sec">
+          <div class="sec-lbl"><i class="fas fa-user-circle"></i> Candidate Info</div>
+          <div class="data-row">
+            <div class="d-itm"><label>Full Name</label><p id="vName">...</p></div>
+            <div class="d-itm"><label>Email</label><p id="vEmail">...</p></div>
+            <div class="d-itm"><label>Phone</label><p id="vPhone">...</p></div>
+            <div class="d-itm"><label>Location</label><p id="vLoc">...</p></div>
+            <div class="d-itm"><label>Education</label><p id="vEdu">...</p></div>
+            <div class="d-itm"><label>Experience</label><p id="vExp">...</p></div>
+            <div class="d-itm"><label>Skills</label><p id="vSkills">...</p></div>
+            <div class="d-itm"><label>Resume/CV Link</label><p id="vResume">...</p></div>
+            <div class="d-itm" style="grid-column:1/-1"><label>Cover Letter</label><p id="vCover" style="background:#F9FAFB; padding:16px; border-radius:12px; font-weight:500; font-size:0.9rem; border:1px solid var(--border-grey); white-space:pre-wrap;">...</p></div>
+          </div>
+        </div>
+
+        <div class="info-sec">
+          <div class="sec-lbl"><i class="fas fa-briefcase"></i> Job & Status</div>
+          <div class="data-row">
+            <div class="d-itm"><label>Job Title</label><p id="vJob" style="color:var(--primary-blue);">...</p></div>
+            <div class="d-itm"><label>M-Pesa Code</label><p id="vCode" style="color:var(--primary-blue); font-family:monospace; font-size:1.1rem; background:#EFF6FF; padding:4px 8px; border-radius:6px; display:inline-block;">...</p></div>
+            <div class="d-itm"><label>Current Status</label><p id="vStatus" style="font-weight:800;">...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-actions" id="manageArea">
+        <div class="act-lbl">Workflow Actions</div>
+        <div id="workflowButtons" class="wf-container"></div>
+        
+        <button class="wf-btn btn-reject" onclick="window.toggleRejectBox()">
+          <i class="fas fa-times-circle"></i> Reject Application
+        </button>
+
+        <div id="rejectBox" class="reject-box">
+          <textarea id="rejectReason" class="rj-inp" rows="3" placeholder="Reason (e.g., Code Mismatch, Not Qualified)..."></textarea>
+          <button class="rj-send" onclick="window.submitRejection()">Confirm Rejection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. UI LOGIC SCRIPT -->
+  <script>
+    const menuToggleBtn   = document.getElementById('menuToggleBtn');
+    const sidebar         = document.getElementById('sidebar');
+    const sidebarOverlay  = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+    const modal = document.getElementById('detailModal');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('show');
+    }
+    if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+    if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+    if (sidebarOverlay) sidebarOverlay.onclick = toggleSidebar;
+
+    let lastY = window.scrollY;
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      const currY = window.scrollY;
+      if (Math.abs(currY - lastY) < 10) return;
+      if (currY > lastY && currY > 60) header.classList.add('hidden');
+      else header.classList.remove('hidden');
+      lastY = currY;
+    }, { passive: true });
+
+    window.showToast = function(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i class="fas ${type === 'danger' ? 'fa-times-circle' : 'fa-check-circle'} toast-icon" style="color:var(--${type === 'danger' ? 'danger-red' : 'success-green'});"></i><span class="toast-msg">${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+    };
+
+    window.closeModal = () => {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    };
+
+    modal.addEventListener('click', (e) => { 
+      if(e.target === modal) window.closeModal(); 
+    });
+
+    window.toggleRejectBox = () => {
+      document.getElementById('rejectBox').classList.toggle('show');
+    };
+  </script>
+
+  <!-- 2. FIREBASE & DATA SCRIPT INLINED -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Firebase Config Embedded directly
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+      authDomain: "skilllink69-122aa.firebaseapp.com",
+      projectId: "skilllink69-122aa",
+      storageBucket: "skilllink69-122aa.firebasestorage.app",
+      messagingSenderId: "673456146518",
+      appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+      measurementId: "G-H69LL8HKYQ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Helper to show Index Error
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index to sync applications:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `Manage Applications | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, (error) => {
+                showIndexError(error);
+            });
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    let allApps = [];
+    let currentApp = null;
+
+    // 1. Authenticate Admin
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                    const userData = uDoc.data();
+                    
+                    let fName = userData.firstName || '';
+                    let lName = userData.lastName || '';
+                    let fullName = `${fName} ${lName}`.trim();
+                    if (!fullName) {
+                        fullName = userData.name || userData.fullName || userData.displayName || 'Admin User';
+                    }
+                    
+                    document.getElementById('navAvatarInit').textContent = (fullName[0] || 'A').toUpperCase();
+                    document.getElementById('navName').textContent = fullName;
+                    document.getElementById('headerName').textContent = fullName;
+                    
+                    loadAppConfig();
+                    setupRealtimeListeners();
+                } else {
+                    window.location.href = "index.html";
+                }
+            } catch(e) { window.location.href = "index.html"; }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = "index.html");
+    });
+
+    // 2. Listen to Data (Real-time updates) setupRealtimeListeners pattern
+    function setupRealtimeListeners() {
+        const appsRef = collection(db, "applications");
+        onSnapshot(appsRef, (snap) => {
+            allApps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderApps(); // Initialize UI
+        }, (error) => {
+            console.error("Error listening to applications:", error);
+            window.showToast("Failed to sync applications", "danger");
+            showIndexError(error);
+        });
+    }
+
+    // 3. Render Grid & Filtering
+    function renderApps() {
+        const term = document.getElementById('inpSearch').value.toLowerCase();
+        const flt = document.getElementById('selFilter').value;
+        const grid = document.getElementById('gridApps');
+        
+        const filtered = allApps.filter(a => {
+            const s = a.status || 'Received';
+            if(flt !== 'All') {
+                if(flt === 'Received') {
+                    if(s !== 'Received' && s !== 'Pending') return false;
+                } else if(s !== flt) {
+                    return false;
+                }
+            }
+            
+            const uName = (a.applicantName || a.fullName || '').toLowerCase();
+            const code = (a.mpesaCode || '').toLowerCase();
+            const job = (a.jobTitle || '').toLowerCase();
+            return uName.includes(term) || code.includes(term) || job.includes(term);
+        });
+
+        // Update stats
+        document.getElementById('statTotal').innerText = allApps.length;
+        
+        // Update Pending count (Received + Pending + Under Review)
+        const pendingCount = allApps.filter(a => ['Received', 'Pending', 'Under Review'].includes(a.status || 'Received')).length;
+        document.getElementById('statPending').innerText = pendingCount;
+        document.getElementById('navBadge').innerText = pendingCount; // Update sidebar badge
+        
+        document.getElementById('statShortlisted').innerText = allApps.filter(a => a.status === 'Shortlisted').length;
+
+        grid.innerHTML = '';
+        if(filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-grey);font-size:1.1rem;background:var(--white);border-radius:24px;border:1px dashed var(--border-grey);">No applications match your criteria.</div>`;
+            return;
+        }
+
+        // Sort latest first
+        filtered.sort((a,b) => {
+            let tA = a.appliedDate || a.appliedAt || 0;
+            let tB = b.appliedDate || b.appliedAt || 0;
+            if(tA && tA.toMillis) tA = tA.toMillis();
+            else if(tA && tA.seconds) tA = tA.seconds * 1000;
+            
+            if(tB && tB.toMillis) tB = tB.toMillis();
+            else if(tB && tB.seconds) tB = tB.seconds * 1000;
+            
+            return tB - tA;
+        });
+
+        filtered.forEach(app => {
+            let dateStr = 'Unknown Date';
+            let appliedVal = app.appliedDate || app.appliedAt;
+            if(appliedVal) {
+                if(appliedVal.toDate) dateStr = appliedVal.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                else if(appliedVal.seconds) dateStr = new Date(appliedVal.seconds * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                else if(typeof appliedVal === 'number' || typeof appliedVal === 'string') dateStr = new Date(appliedVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+            
+            let status = app.status || 'Received';
+            if (status.toLowerCase() === 'pending') status = 'Received';
+            
+            const sClass = `st-${status.replace(/\s+/g, '')}`;
+
+            grid.innerHTML += `
+              <div class="app-card">
+                <div class="c-head">
+                  <div class="c-name">${app.applicantName || app.fullName || 'Unknown Candidate'}</div>
+                  <div class="c-date">${dateStr}</div>
+                </div>
+                <div class="c-job"><i class="fas fa-briefcase"></i> ${app.jobTitle || 'Unknown Job'}</div>
+                <div class="st-badge ${sClass}">${status}</div>
+                <div class="c-foot">
+                  <span class="code-txt">${app.mpesaCode || 'N/A'}</span>
+                  <button class="btn-view" onclick="window.openModal('${app.id}')"><i class="fas fa-eye"></i> Manage</button>
+                </div>
+              </div>
+            `;
+        });
+    }
+
+    // Filter listeners
+    document.getElementById('inpSearch').addEventListener('input', renderApps);
+    document.getElementById('selFilter').addEventListener('change', renderApps);
+
+    // 4. Modal Data & Action Workflow
+    const wfButtons = document.getElementById('workflowButtons');
+    const rejectBox = document.getElementById('rejectBox');
+
+    window.openModal = (id) => {
+        currentApp = allApps.find(a => a.id === id);
+        if(!currentApp) return;
+
+        document.getElementById('vName').textContent = currentApp.applicantName || currentApp.fullName || 'N/A';
+        document.getElementById('vEmail').textContent = currentApp.applicantEmail || currentApp.email || 'N/A';
+        document.getElementById('vPhone').textContent = currentApp.applicantPhone || currentApp.phone || 'N/A';
+        document.getElementById('vLoc').textContent = currentApp.location || 'N/A';
+        document.getElementById('vEdu').textContent = currentApp.education || 'N/A';
+        document.getElementById('vExp').textContent = currentApp.experience || 'N/A';
+        document.getElementById('vSkills').textContent = currentApp.skills || 'N/A';
+        
+        const resumeContainer = document.getElementById('vResume');
+        if (currentApp.resumeUrl || currentApp.resumeLink) {
+            const rLink = currentApp.resumeUrl || currentApp.resumeLink;
+            resumeContainer.innerHTML = `<a href="${rLink}" target="_blank" rel="noopener noreferrer">View Resume <i class="fas fa-external-link-alt"></i></a>`;
+        } else {
+            resumeContainer.textContent = 'N/A';
+        }
+        
+        document.getElementById('vCover').textContent = currentApp.coverLetter || 'No cover letter provided.';
+        
+        document.getElementById('vJob').textContent = currentApp.jobTitle || 'N/A';
+        document.getElementById('vCode').textContent = currentApp.mpesaCode || 'N/A';
+        
+        let status = currentApp.status || 'Received';
+        if(status.toLowerCase() === 'pending') status = 'Received';
+        document.getElementById('vStatus').textContent = status;
+        
+        // Reset reject box
+        rejectBox.classList.remove('show');
+        document.getElementById('rejectReason').value = '';
+
+        wfButtons.innerHTML = '';
+
+        if (status === 'Received' || status === 'Pending') { 
+            wfButtons.innerHTML = `<button class="wf-btn btn-start-review" onclick="window.changeStatus('${id}', 'Under Review')"><i class="fas fa-search"></i> Start Review (Move to Under Review)</button>`; 
+        } else if (status === 'Under Review') { 
+            wfButtons.innerHTML = `<button class="wf-btn btn-verify" onclick="window.changeStatus('${id}', 'Verified')"><i class="fas fa-check-circle"></i> Verify Payment (Move to Verified)</button>`; 
+        } else if (status === 'Verified') { 
+            wfButtons.innerHTML = `<button class="wf-btn btn-shortlist" onclick="window.changeStatus('${id}', 'Shortlisted')"><i class="fas fa-star"></i> Shortlist Candidate</button>`; 
+        } else if (status === 'Shortlisted') { 
+            wfButtons.innerHTML = `<button class="wf-btn btn-hire" onclick="window.changeStatus('${id}', 'Hired')"><i class="fas fa-handshake"></i> Hire Candidate</button>`; 
+        } else if (status === 'Hired') { 
+            wfButtons.innerHTML = `<div style="text-align:center;color:var(--primary-blue);font-weight:800;padding:12px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;">Already Hired</div>`; 
+        } else if (status === 'Rejected') { 
+            wfButtons.innerHTML = `<div style="text-align:center;color:var(--danger-red);font-weight:800;padding:12px;background:#FEE2E2;border-radius:12px;border:1px dashed #FECACA;">Application Rejected<br><span style="font-size:0.8rem; font-weight:500; margin-top:5px; display:block;">Reason: ${currentApp.rejectReason || 'No reason specified'}</span></div>`; 
+        }
+
+        document.getElementById('detailModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.changeStatus = async (appId, newStatus) => {
+        if(!confirm(`Move application to: ${newStatus}?`)) return;
+        
+        let payStatus = currentApp.paymentStatus || 'Pending';
+        if (newStatus === 'Verified') payStatus = 'Verified';
+
+        let notifTitle = `Status Update: ${newStatus}`;
+        let notifMsg = `Your application for ${currentApp.jobTitle || 'the position'} is now ${newStatus}.`;
+        let notifType = 'success';
+
+        if(newStatus === 'Under Review') { notifTitle = "Application Under Review"; notifMsg = `We are now reviewing your application details and verifying payment for the ${currentApp.jobTitle || 'position'}.`; notifType = 'info'; } 
+        else if (newStatus === 'Verified') { notifTitle = "Payment Verified"; notifMsg = `Good news! Your payment has been verified. Your application is processing.`; notifType = 'success'; } 
+        else if (newStatus === 'Shortlisted') { notifTitle = "You are Shortlisted!"; notifMsg = `Congratulations! You have been shortlisted for the ${currentApp.jobTitle || 'position'}.`; notifType = 'warning'; } 
+        else if (newStatus === 'Hired') { notifTitle = "You are Hired!"; notifMsg = `Congratulations! You have been selected for the ${currentApp.jobTitle || 'position'}. HR will contact you shortly.`; notifType = 'success'; }
+
+        try {
+            await updateDoc(doc(db, "applications", appId), {
+                status: newStatus,
+                paymentStatus: payStatus,
+                viewedByAdmin: true,
+                updatedAt: serverTimestamp()
+            });
+            
+            const targetUserId = currentApp.userId || currentApp.applicantId;
+            if (targetUserId) { 
+                await addDoc(collection(db, "notifications"), { 
+                    userId: targetUserId, 
+                    title: notifTitle, 
+                    message: notifMsg, 
+                    read: false, 
+                    type: notifType, 
+                    createdAt: serverTimestamp() 
+                }); 
+            }
+
+            window.showToast(`Application updated to ${newStatus}`);
+            window.closeModal();
+        } catch(err) {
+            console.error(err);
+            window.showToast("Failed to update status", "danger");
+        }
+    };
+
+    window.submitRejection = async () => {
+        if(!currentApp) return;
+        const reason = document.getElementById('rejectReason').value.trim();
+        if(!reason) {
+            alert("Please enter a reason for rejection.");
+            return;
+        }
+        if(!confirm("Are you sure you want to reject this candidate?")) return;
+
+        try {
+            await updateDoc(doc(db, "applications", currentApp.id), {
+                status: 'Rejected',
+                paymentStatus: 'Rejected',
+                rejectReason: reason,
+                viewedByAdmin: true,
+                updatedAt: serverTimestamp()
+            });
+
+            const targetUserId = currentApp.userId || currentApp.applicantId;
+            if (targetUserId) {
+                await addDoc(collection(db, "notifications"), {
+                    userId: targetUserId, 
+                    title: "Application Rejected", 
+                    message: `We regret to inform you that your application was not successful. Reason: ${reason}`,
+                    read: false, 
+                    type: 'error', 
+                    createdAt: serverTimestamp()
+                });
+            }
+
+            window.showToast('Application Rejected', 'danger');
+            window.closeModal();
+        } catch(err) {
+            console.error(err);
+            window.showToast("Failed to reject application", "danger");
+        }
+    };
+
+    // 5. PDF REPORT GENERATION
+    window.generateReport = () => {
+        if(allApps.length === 0) {
+            alert("No data available to export.");
+            return;
+        }
+        
+        try {
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF();
+            
+            docPdf.setFontSize(18);
+            docPdf.setTextColor(0, 0, 204); 
+            docPdf.text("Swifthire - Applications Report", 14, 20);
+            
+            docPdf.setFontSize(10);
+            docPdf.setTextColor(100, 100, 100);
+            docPdf.text(`Exported on: ${new Date().toLocaleString()}`, 14, 28);
+            
+            // Only export the currently filtered items
+            const term = document.getElementById('inpSearch').value.toLowerCase();
+            const flt = document.getElementById('selFilter').value;
+            const exportData = allApps.filter(a => {
+                const s = a.status || 'Received';
+                if(flt !== 'All') {
+                    if(flt === 'Received') {
+                        if(s !== 'Received' && s !== 'Pending') return false;
+                    } else if(s !== flt) {
+                        return false;
+                    }
+                }
+                const uName = (a.applicantName || a.fullName || '').toLowerCase();
+                return uName.includes(term);
+            });
+
+            const rows = exportData.map(a => {
+                let dStr = 'N/A';
+                let appliedVal = a.appliedDate || a.appliedAt;
+                if(appliedVal) {
+                    if(appliedVal.toDate) dStr = appliedVal.toDate().toLocaleDateString('en-GB');
+                    else if(appliedVal.seconds) dStr = new Date(appliedVal.seconds * 1000).toLocaleDateString('en-GB');
+                    else if(typeof appliedVal === 'number' || typeof appliedVal === 'string') dStr = new Date(appliedVal).toLocaleDateString('en-GB');
+                }
+                return [
+                    dStr,
+                    a.applicantName || a.fullName || 'N/A',
+                    a.jobTitle || 'N/A',
+                    a.status || 'Received',
+                    a.mpesaCode || 'N/A'
+                ];
+            });
+
+            docPdf.autoTable({
+                startY: 35,
+                head: [['Date Applied', 'Applicant Name', 'Job Title', 'Status', 'M-Pesa Code']],
+                body: rows,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 0, 204], textColor: [255, 255, 255] },
+                styles: { fontSize: 9, cellPadding: 6 }
+            });
+
+            docPdf.save("Swifthire_Applications_Report.pdf");
+            window.showToast("Report exported successfully!");
+        } catch(e) {
+            console.error(e);
+            alert("Failed to generate PDF. Make sure jsPDF is loaded properly.");
+        }
+    };
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

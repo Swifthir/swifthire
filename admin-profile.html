@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">Admin Profile | Swifthire Admin</title>
+  
+  <meta name="description" content="Admin Profile - Swifthire Admin">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── EXACT SWIFTHIRE VARIABLES ── */
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --shadow-hover: 0 20px 40px rgba(0,0,0,0.08);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-x: hidden; 
+        padding-bottom: 40px; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: transform 0.3s ease, width 0.3s, left 0.3s; 
+    }
+    header.hidden { transform: translateY(-100%); }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    
+    /* FIX: Mobile Menu Visibility */
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; min-width: 44px; min-height: 44px; }
+    
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+    .header-user-info { display:flex; flex-direction:column; text-align:right; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px; background: var(--gradient-blue); 
+        color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { 
+        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; 
+        color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; 
+    }
+    .sidebar-link { 
+        display: flex; align-items: center; gap: 14px; padding: 13px 20px; 
+        color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; 
+        transition: var(--transition); border-right: 4px solid transparent; 
+        margin: 0 8px; border-radius: 12px; 
+    }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    /* ── LAYOUT ── */
+    .dashboard-container { 
+        margin-top: 80px; padding: 20px; width: 100%; 
+        max-width: 1400px; transition: var(--transition); margin-left: 0; 
+    }
+
+    .page-header { margin-bottom: 30px; animation: slideUp 0.5s ease-out; }
+    .page-title { font-family: var(--font-serif); font-size: 2.2rem; color: var(--text-dark); margin-bottom: 8px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-subtitle { color: var(--text-grey); font-size: 1rem; font-weight: 500; }
+
+    /* ── PROFILE LAYOUT ── */
+    .profile-wrapper { 
+        display: flex; flex-direction: column; gap: 24px; animation: slideUp 0.6s ease-out;
+    }
+    .profile-side { 
+        background: var(--white); border-radius: 24px; padding: 40px 30px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        text-align: center; display: flex; flex-direction: column; align-items: center;
+    }
+    .profile-main { 
+        background: var(--white); border-radius: 24px; padding: 40px 30px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        flex: 1;
+    }
+
+    /* ── AVATAR SECTION ── */
+    .avatar-circle { 
+        width: 120px; height: 120px; border-radius: 50%; 
+        background: var(--gradient-blue); color: var(--white); 
+        font-size: 3rem; font-weight: 800; display: flex; align-items: center; justify-content: center; 
+        border: 6px solid #EFF6FF; box-shadow: 0 10px 25px rgba(0,0,204,0.2); 
+        margin-bottom: 20px; position: relative;
+    }
+    .admin-name-large { font-size: 1.6rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+    .admin-role-badge { 
+        background: #EFF6FF; color: var(--bright-blue); padding: 6px 16px; 
+        border-radius: 30px; font-size: 0.8rem; font-weight: 800; 
+        text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #BFDBFE;
+    }
+
+    .sidebar-stats {
+        width: 100%; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-grey);
+        display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;
+    }
+    .stat-item-val { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); }
+    .stat-item-lbl { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; text-transform: uppercase; }
+
+    /* ── FORM ── */
+    .form-section-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+    .form-section-title i { color: var(--primary-blue); }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;}
+    .form-input, .form-textarea { 
+        width: 100%; padding: 14px 18px; border: 2px solid var(--border-grey); 
+        border-radius: 12px; font-size: 0.95rem; background: #F9FAFB; 
+        transition: var(--transition); font-family: var(--font-main); color: var(--text-dark); outline: none; font-weight: 500;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 4px #EFF6FF; }
+    .form-input:disabled { background: var(--bg-light-grey); color: #9CA3AF; cursor: not-allowed; border-color: var(--border-grey); }
+
+    /* ── BUTTONS ── */
+    .btn-save { 
+        background: var(--gradient-blue); color: var(--white); border: none; 
+        padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; 
+        cursor: pointer; transition: var(--transition); width: 100%; margin-top: 15px; 
+        display: flex; justify-content: center; align-items: center; gap: 10px; 
+        box-shadow: 0 6px 20px rgba(0,0,204,0.2);
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,204,0.3); }
+    .btn-save:disabled { background: #9CA3AF; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-danger-outline {
+        background: transparent; color: var(--danger-red); border: 2px solid var(--danger-bg); 
+        padding: 12px 24px; border-radius: 30px; font-weight: 800; cursor: pointer; 
+        transition: var(--transition); display: inline-flex; align-items: center; gap: 10px; font-size: 0.9rem; 
+        margin-top: 30px; width: 100%; justify-content: center;
+    }
+    .btn-danger-outline:hover { background: var(--danger-bg); border-color: #FECACA; }
+
+    /* Loaders & Toasts */
+    .btn-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid var(--white); border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .toast-container { position: fixed; bottom: 24px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { 
+        background: var(--white); border-radius: 14px; padding: 14px 18px; 
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12); border-left: 4px solid var(--success-green); 
+        display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: 340px; 
+        animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1); 
+    }
+    @keyframes toastIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+    .toast-icon { font-size: 1.2rem; flex-shrink: 0; color: var(--success-green); }
+    .toast-msg  { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); flex: 1; }
+
+    @media (min-width: 768px) {
+        .form-grid { grid-template-columns: 1fr 1fr; }
+        .form-group.full-width { grid-column: span 2; }
+    }
+    @media (min-width: 900px) {
+        .profile-wrapper { flex-direction: row; align-items: stretch; }
+        .profile-side { flex: 0 0 320px; position: sticky; top: 100px; }
+    }
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .dashboard-container { margin-left: 280px; width: calc(100% - 280px); padding: 30px 40px; }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="admin-dashboard.html" style="text-decoration: none;">
+          <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      </a>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="navAvatarInit">A</div>
+      <div>
+        <div class="sidebar-profile-name" id="navName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link active"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link"><i class="fas fa-briefcase"></i> Job Management</a>
+      <a href="admin-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> Applications</a>
+      <a href="admin-user-directory.html" class="sidebar-link"><i class="fas fa-users"></i> User Directory</a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link"><i class="fas fa-list-alt"></i> Logs</a>
+      <a href="admin-reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> Reports</a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link"><i class="fas fa-headset"></i> Support</a>
+      <a href="admin-system-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-right">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtnTop">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-container">
+    <div class="page-header">
+      <h1 class="page-title">Admin Profile</h1>
+      <p class="page-subtitle">Manage your personal information and system preferences.</p>
+    </div>
+
+    <div class="profile-wrapper">
+      
+      <!-- Left Side: Summary -->
+      <div class="profile-side">
+        <div class="avatar-circle" id="mainAvatarInit">A</div>
+        <h2 class="admin-name-large" id="displayName">Admin User</h2>
+        <span class="admin-role-badge">Super Admin</span>
+        
+        <div class="sidebar-stats">
+          <div>
+            <div class="stat-item-val" id="statActions">-</div>
+            <div class="stat-item-lbl">Actions Today</div>
+          </div>
+          <div>
+            <div class="stat-item-val" id="statLogins">-</div>
+            <div class="stat-item-lbl">Total Logins</div>
+          </div>
+        </div>
+
+        <button class="btn-danger-outline" id="logoutBtnMain">
+          <i class="fas fa-sign-out-alt"></i> Secure Sign Out
+        </button>
+      </div>
+
+      <!-- Right Side: Edit Form -->
+      <div class="profile-main">
+        <h3 class="form-section-title"><i class="fas fa-user-edit"></i> Personal Information</h3>
+        
+        <form id="profileForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe" required>
+            </div>
+
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="email" class="form-input" disabled value="Loading...">
+              <div style="font-size:0.75rem; color:#9CA3AF; margin-top:6px; font-weight:600;"><i class="fas fa-lock"></i> Email cannot be changed here.</div>
+            </div>
+
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="phone" class="form-input" placeholder="e.g. +254 700 000 000">
+            </div>
+
+            <div class="form-group">
+              <label>Location / Branch</label>
+              <input type="text" id="location" class="form-input" placeholder="e.g. Nairobi Head Office">
+            </div>
+
+            <div class="form-group full-width">
+              <label>Bio / Role Description</label>
+              <textarea id="bio" class="form-textarea" rows="4" placeholder="Brief description of your administrative responsibilities..."></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <button type="submit" class="btn-save" id="saveBtn">
+                <div class="btn-spinner" id="btnSpinner"></div>
+                <span id="btnText"><i class="fas fa-save"></i> Save Changes</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 1. UI LOGIC SCRIPT (Instantly ready for mobile sidebars) -->
+  <script>
+    const menuToggleBtn   = document.getElementById('menuToggleBtn');
+    const sidebar         = document.getElementById('sidebar');
+    const sidebarOverlay  = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('show');
+    }
+    if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+    if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+    if (sidebarOverlay) sidebarOverlay.onclick = toggleSidebar;
+
+    let lastY = window.scrollY;
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      const currY = window.scrollY;
+      if (Math.abs(currY - lastY) < 10) return;
+      if (currY > lastY && currY > 60) header.classList.add('hidden');
+      else header.classList.remove('hidden');
+      lastY = currY;
+    }, { passive: true });
+
+    // Global Toast Function
+    window.showToast = function(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<i class="fas fa-check-circle toast-icon"></i><span class="toast-msg">${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+    };
+
+    // Update Avatar Logic
+    window.updateDisplayNames = function(name) {
+      const parts = name.split(' ');
+      const init = (parts[0] ? parts[0].charAt(0).toUpperCase() : 'A') + 
+                   (parts[1] ? parts[1].charAt(0).toUpperCase() : '');
+      
+      document.getElementById('displayName').textContent = name;
+      document.getElementById('navName').textContent = name;
+      document.getElementById('headerName').textContent = name;
+      
+      document.getElementById('mainAvatarInit').textContent = init;
+      document.getElementById('navAvatarInit').textContent = init;
+    };
+  </script>
+
+  <!-- 2. FIREBASE & DATA SCRIPT INLINED -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+      authDomain: "skilllink69-122aa.firebaseapp.com",
+      projectId: "skilllink69-122aa",
+      storageBucket: "skilllink69-122aa.firebasestorage.app",
+      messagingSenderId: "673456146518",
+      appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+      measurementId: "G-H69LL8HKYQ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUserId = null;
+    let profileUnsubscribe = null;
+    let isInitialLoad = true;
+
+    // Helper to show Index Error
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `Admin Profile | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, (error) => {
+                console.error(error);
+                showIndexError(error);
+            });
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    function setupRealtimeListeners(user) {
+        currentUserId = user.uid;
+        
+        if (profileUnsubscribe) profileUnsubscribe();
+        
+        profileUnsubscribe = onSnapshot(doc(db, "users", user.uid), (uDoc) => {
+            if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                const userData = uDoc.data();
+                
+                // Add console log here to debug database fields directly in the browser!
+                console.log("Firestore User Data:", userData); 
+                
+                // Enhanced Fallback Logic: Try multiple field combinations
+                let fName = userData.firstName || '';
+                let lName = userData.lastName || '';
+                let fullName = `${fName} ${lName}`.trim();
+                
+                // Fallbacks if firstName/lastName are missing in DB
+                if (!fullName) {
+                    fullName = userData.name || userData.fullName || userData.displayName || 'Admin User';
+                }
+                
+                if (isInitialLoad) {
+                    document.getElementById('fullName').value = fullName;
+                    document.getElementById('email').value = user.email || userData.email || '';
+                    document.getElementById('phone').value = userData.phone || '';
+                    document.getElementById('location').value = userData.location || '';
+                    document.getElementById('bio').value = userData.bio || '';
+                    isInitialLoad = false;
+                }
+                
+                // Placeholder stats for visual layout
+                document.getElementById('statActions').textContent = userData.actionsToday || Math.floor(Math.random() * 50) + 10;
+                document.getElementById('statLogins').textContent = userData.totalLogins || Math.floor(Math.random() * 500) + 100;
+                
+                // Update UI text
+                window.updateDisplayNames(fullName);
+            } else {
+                window.location.href = "index.html";
+            }
+        }, (error) => {
+            console.error("Error listening to profile:", error);
+            showIndexError(error);
+        });
+    }
+
+    // Load User Data
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setupRealtimeListeners(user);
+            loadAppConfig();
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    // Handle Save Form
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUserId) return;
+        
+        const saveBtn = document.getElementById('saveBtn');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+        
+        saveBtn.disabled = true;
+        btnSpinner.style.display = 'block';
+        btnText.innerHTML = 'Saving...';
+
+        try {
+            const fullName = document.getElementById('fullName').value.trim();
+            const parts = fullName.split(' ');
+            const firstName = parts[0] || '';
+            const lastName = parts.slice(1).join(' ') || '';
+            
+            // Updating with standard fields, and pushing 'name' too as fallback
+            await updateDoc(doc(db, "users", currentUserId), {
+                name: fullName,
+                firstName: firstName,
+                lastName: lastName,
+                phone: document.getElementById('phone').value.trim(),
+                location: document.getElementById('location').value.trim(),
+                bio: document.getElementById('bio').value.trim(),
+                updatedAt: serverTimestamp()
+            });
+            
+            window.updateDisplayNames(fullName);
+            window.showToast('Profile updated successfully!');
+        } catch (error) {
+            console.error(error);
+            window.showToast('Error updating profile. Please try again.');
+        } finally {
+            saveBtn.disabled = false;
+            btnSpinner.style.display = 'none';
+            btnText.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        }
+    });
+
+    // Handle Logouts
+    const handleLogout = () => {
+        signOut(auth).then(() => window.location.href = "index.html");
+    };
+    document.getElementById('logoutBtnTop').addEventListener('click', handleLogout);
+    document.getElementById('logoutBtnMain').addEventListener('click', handleLogout);
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

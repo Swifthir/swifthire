@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Job Details | Swifthire</title>
+
+    <meta name="description" content="View job details and apply on Swifthire.">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════════
+           DESIGN TOKENS
+        ═══════════════════════════════════════════════ */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg,#0000CC,#3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            --shadow-card:    0 10px 25px rgba(0,0,0,0.05);
+            --transition:     all 0.3s cubic-bezier(0.4,0,0.2,1);
+            --sidebar-w:      280px;
+        }
+
+        *  { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body {
+            font-family: var(--font-main); color: var(--text-grey);
+            background: #F8FAFC;
+            background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%);
+            background-attachment: fixed; min-height: 100vh; overflow-x: hidden; padding-bottom: 40px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           TOAST
+        ═══════════════════════════════════════════════ */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { display: flex; align-items: center; gap: 12px; background: var(--white); border-radius: 14px; padding: 14px 18px; min-width: 280px; max-width: 380px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-left: 4px solid var(--bright-blue); animation: slideInRight 0.35s cubic-bezier(0.4,0,0.2,1); font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
+        .toast.success { border-left-color: var(--success-green); }
+        .toast.error   { border-left-color: var(--danger-red); }
+        .toast.info    { border-left-color: var(--bright-blue); }
+        .toast i { font-size: 1.2rem; flex-shrink: 0; }
+        .toast.success i { color: var(--success-green); }
+        .toast.error   i { color: var(--danger-red); }
+        .toast.info    i { color: var(--bright-blue); }
+        .toast span    { flex: 1; }
+        .toast-close   { background: none; border: none; color: var(--text-grey); cursor: pointer; font-size: 0.85rem; padding: 2px; }
+        .toast.removing { animation: slideOutRight 0.35s ease forwards; }
+        @keyframes slideInRight  { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes slideOutRight { from { opacity:1; transform:translateX(0);    } to { opacity:0; transform:translateX(40px); } }
+
+        /* ═══════════════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════════════ */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--white); box-shadow: 4px 0 24px rgba(0,0,0,0.06); z-index: 2000; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-header { padding: 28px 24px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); background: linear-gradient(135deg, #EFF6FF, #F8FAFC); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 38px; height: 38px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 34px; height: 34px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 0.9rem; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+        .sidebar-user { padding: 20px 24px; border-bottom: 1px solid var(--border-grey); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,204,0.25); }
+        .sidebar-user-info { flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-weight: 800; color: var(--text-dark); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+        .sidebar-user-badge { background: linear-gradient(135deg,#FEF3C7,#FDE68A); border: 1px solid #FCD34D; color: #92400E; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+        .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 2px; flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-left: 3px solid transparent; position: relative; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); border-left-color: rgba(0,0,204,0.3); }
+        .sidebar-link.active { color: var(--primary-blue); background: linear-gradient(90deg, #EFF6FF, #F8FAFC); border-left-color: var(--primary-blue); font-weight: 700; }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-badge { margin-left: auto; background: var(--gradient-blue); color: var(--white); font-size: 0.65rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .sidebar-section-label { padding: 14px 24px 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-grey); text-transform: uppercase; letter-spacing: 0.8px; }
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 12px 16px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 14px; color: var(--text-grey); font-family: var(--font-main); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
+        .sidebar-logout:hover { background: var(--danger-bg); color: var(--danger-red); border-color: #FECACA; }
+
+        /* ═══════════════════════════════════════════════
+           TOP HEADER
+        ═══════════════════════════════════════════════ */
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 14px 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 1px 0 var(--border-grey), 0 4px 20px rgba(0,0,0,0.04); transition: transform 0.3s ease; border-bottom: 1px solid rgba(229,231,235,0.8); }
+        header.hidden { transform: translateY(-100%); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle-btn { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; display: none; align-items: center; justify-content: center; transition: var(--transition); z-index: 1001; }
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 38px; height: 38px; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: 20px; border: 2px solid var(--border-grey); background: var(--white); color: var(--text-dark); font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: var(--font-main); transition: var(--transition); text-decoration: none; }
+        .btn-back:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #EFF6FF; }
+        .header-icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); display: flex; align-items: center; justify-content: center; color: var(--text-grey); cursor: pointer; font-size: 1rem; transition: var(--transition); position: relative; text-decoration: none; }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); }
+        .header-avatar-btn { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 30px; cursor: pointer; transition: var(--transition); text-decoration: none; }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--white); }
+        .header-avatar-name { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+
+        /* ═══════════════════════════════════════════════
+           MAIN LAYOUT
+        ═══════════════════════════════════════════════ */
+        .page-wrapper { margin-top: 75px; padding: 28px 5% 40px; max-width: 1280px; margin-left: auto; margin-right: auto; width: 100%; }
+
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-grey); margin-bottom: 24px; }
+        .breadcrumb a { color: var(--primary-blue); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb i { font-size: 0.7rem; color: #9CA3AF; }
+
+        .btn { padding: 11px 22px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-main); font-size: 0.92rem; border: none; text-decoration: none; }
+        .btn-primary { background: var(--gradient-blue); color: var(--white); box-shadow: 0 4px 14px rgba(0,0,204,0.2); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,204,0.3); }
+        .btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-grey); color: var(--text-dark); }
+        .btn-outline:hover { background: #EFF6FF; border-color: var(--primary-blue); color: var(--primary-blue); }
+        .btn-outline.saved { border-color: var(--primary-blue); color: var(--primary-blue); background: #EFF6FF; }
+        .btn-lg { padding: 14px 28px; font-size: 1rem; width: 100%; }
+
+        /* Error / Loading State */
+        #errorState { display: none; text-align: center; padding: 60px 20px; background: var(--white); border-radius: 24px; border: 1px dashed var(--border-grey); box-shadow: var(--shadow-card); margin-bottom: 30px; }
+        #errorState i { font-size: 3rem; color: #D1D5DB; margin-bottom: 15px; }
+        #errorState h3 { color: var(--primary-blue); margin-bottom: 10px; font-family: var(--font-serif); font-size: 1.6rem; }
+        #errorState p { color: var(--text-grey); margin-bottom: 25px; font-weight: 500; }
+
+        .job-hero { background: var(--white); border-radius: 24px; padding: 32px; margin-bottom: 28px; box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); position: relative; overflow: hidden; }
+        .job-hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gradient-blue); border-radius: 24px 24px 0 0; }
+        .job-hero-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 20px; }
+        .job-hero-company { display: flex; align-items: center; gap: 20px; }
+        .job-hero-logo { width: 80px; height: 80px; background: linear-gradient(135deg,#EFF6FF,#DBEAFE); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: var(--primary-blue); flex-shrink: 0; border: 2px solid #BFDBFE; box-shadow: 0 4px 12px rgba(0,0,204,0.08); }
+        .job-hero-info h1 { font-family: var(--font-serif); font-size: 1.85rem; color: var(--text-dark); margin-bottom: 6px; line-height: 1.2; }
+        .job-hero-company-name { display: flex; align-items: center; gap: 7px; font-size: 1rem; font-weight: 700; color: var(--text-grey); }
+        .verified-badge { color: var(--bright-blue); font-size: 1rem; }
+        .job-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+        .hero-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px; font-size: 0.82rem; font-weight: 700; }
+        .pill-blue   { background: #EFF6FF; color: var(--primary-blue); border: 1px solid #BFDBFE; }
+        .pill-green  { background: #dcfce7; color: var(--dark-green);   border: 1px solid #bbf7d0; }
+        .pill-purple { background: #f5f3ff; color: #7c3aed;             border: 1px solid #ddd6fe; }
+        .pill-orange { background: #fff7ed; color: #c2410c;             border: 1px solid #fed7aa; }
+
+        .job-hero-meta { display: flex; flex-wrap: wrap; gap: 0; padding-top: 24px; border-top: 1px solid var(--border-grey); }
+        .job-meta-item { display: flex; align-items: center; gap: 12px; padding: 14px 24px 14px 0; margin-right: 24px; border-right: 1px solid var(--border-grey); }
+        .job-meta-item:last-child { border-right: none; margin-right: 0; }
+        .job-meta-icon { width: 40px; height: 40px; border-radius: 12px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: var(--bright-blue); font-size: 1rem; flex-shrink: 0; }
+        .job-meta-label { font-size: 0.75rem; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+        .job-meta-value { font-size: 0.97rem; font-weight: 700; color: var(--text-dark); margin-top: 1px; }
+        .job-meta-value.salary { color: var(--dark-green); font-size: 1.05rem; }
+
+        .detail-layout { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; }
+        .content-card { background: var(--white); border-radius: 20px; padding: 32px; box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); margin-bottom: 0; }
+        .job-section { margin-bottom: 34px; }
+        .job-section:last-child { margin-bottom: 0; }
+        .section-title { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--text-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid var(--bg-light-grey); }
+        .section-title-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 0.9rem; flex-shrink: 0; }
+        .section-body { font-size: 0.97rem; color: var(--text-grey); line-height: 1.85; font-weight: 500; }
+        .section-body p { margin-bottom: 14px; }
+        .section-body p:last-child { margin-bottom: 0; }
+
+        .req-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+        .req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 0.97rem; font-weight: 500; color: var(--text-dark); background: var(--bg-light-grey); border-radius: 12px; padding: 12px 16px; border: 1px solid var(--border-grey); }
+        .req-list li i { color: var(--success-green); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
+
+        .benefits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .benefit-item { display: flex; align-items: center; gap: 12px; background: var(--bg-light-grey); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border-grey); font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
+        .benefit-item i { width: 32px; height: 32px; border-radius: 10px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: var(--bright-blue); font-size: 0.9rem; flex-shrink: 0; }
+
+        .skills-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+        .skill-chip { padding: 8px 18px; border-radius: 30px; background: #EFF6FF; border: 1.5px solid #c7d2fe; font-size: 0.85rem; font-weight: 700; color: var(--primary-blue); transition: var(--transition); cursor: default; }
+        .skill-chip:hover { background: #DBEAFE; border-color: var(--bright-blue); transform: translateY(-1px); }
+
+        .right-sidebar { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 90px; }
+        .sidebar-card { background: var(--white); border-radius: 20px; padding: 24px; box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); }
+        .sidebar-card-title { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .sidebar-card-title i { color: var(--bright-blue); }
+
+        .apply-cta-card { background: var(--gradient-blue); border: none; position: relative; overflow: hidden; }
+        .apply-cta-card::after { content: ''; position: absolute; bottom: -20px; right: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.06); }
+        .apply-cta-card .sidebar-card-title { color: var(--white); font-family: var(--font-serif); font-size: 1.25rem; }
+        .apply-cta-text { font-size: 0.9rem; color: rgba(255,255,255,0.85); line-height: 1.6; font-weight: 500; margin-bottom: 18px; }
+        .apply-cta-card .btn { background: var(--white); color: var(--primary-blue); font-weight: 800; }
+        .apply-cta-card .btn:hover { background: #EFF6FF; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .info-list { display: flex; flex-direction: column; gap: 13px; }
+        .info-list-item { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
+        .info-list-item i { width: 32px; height: 32px; border-radius: 10px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: var(--bright-blue); font-size: 0.85rem; flex-shrink: 0; }
+        .info-list-item span { color: var(--text-grey); }
+
+        .deadline-warning { display: flex; align-items: center; gap: 10px; background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 12px; padding: 12px 14px; font-size: 0.85rem; font-weight: 600; color: #92400E; margin-top: 14px; }
+        .deadline-warning i { color: #D97706; font-size: 1rem; }
+
+        .similar-section { margin-top: 36px; }
+        .similar-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .similar-section-title { font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-dark); }
+        .see-all-link { font-size: 0.9rem; font-weight: 700; color: var(--primary-blue); text-decoration: none; }
+        .see-all-link:hover { text-decoration: underline; }
+        .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+
+        .similar-card { background: var(--white); border-radius: 18px; padding: 20px; box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); border-bottom: 4px solid var(--border-grey); transition: var(--transition); cursor: pointer; }
+        .similar-card:hover { border-bottom-color: var(--bright-blue); transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,0.08); }
+        .similar-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+        .similar-card-logo { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg,#EFF6FF,#DBEAFE); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary-blue); font-size: 1rem; border: 1px solid #BFDBFE; }
+        .similar-card-title { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+        .similar-card-company { font-size: 0.85rem; color: var(--text-grey); font-weight: 600; }
+        .similar-card-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+        .similar-card-pill { font-size: 0.78rem; font-weight: 700; padding: 4px 11px; border-radius: 20px; background: var(--bg-light-grey); color: var(--text-dark); border: 1px solid var(--border-grey); display: inline-flex; align-items: center; gap: 5px; }
+        .similar-card-pill i { color: var(--primary-blue); font-size: 0.72rem; }
+        .similar-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border-grey); }
+        .similar-salary { font-size: 0.97rem; font-weight: 800; color: var(--dark-green); }
+        .similar-posted { font-size: 0.8rem; color: #9CA3AF; font-weight: 500; }
+
+        .modal-overlay { position: fixed; inset:0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); z-index: 5000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s ease; padding: 20px; }
+        .modal-overlay.active { opacity:1; pointer-events:auto; }
+        .modal { background: var(--white); width:100%; max-width: 620px; border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 92vh; overflow: hidden; transform: scale(0.96) translateY(16px); transition: 0.3s ease; border: 1px solid var(--border-grey); }
+        .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+        .modal-progress { display: flex; gap: 0; padding: 0 25px; background: var(--bg-light-grey); border-bottom: 1px solid var(--border-grey); }
+        .modal-progress-step { flex: 1; padding: 14px 0; text-align: center; font-size: 0.82rem; font-weight: 700; color: #9CA3AF; border-bottom: 3px solid transparent; transition: var(--transition); }
+        .modal-progress-step.active { color: var(--primary-blue); border-bottom-color: var(--bright-blue); }
+        .modal-progress-step.done   { color: var(--success-green); border-bottom-color: var(--success-green); }
+
+        .modal-header { padding: 20px 25px 16px; display: flex; justify-content: space-between; align-items: center; background: var(--white); }
+        .modal-title { font-family: var(--font-serif); font-size: 1.35rem; color: var(--text-dark); }
+        .modal-subtitle { font-size: 0.85rem; color: var(--text-grey); font-weight: 500; margin-top: 2px; }
+        .modal-close { background: var(--bg-light-grey); border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; color: var(--text-grey); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .modal-close:hover { background: var(--danger-bg); color: var(--danger-red); }
+        .modal-body { padding: 24px 25px; overflow-y: auto; flex: 1; }
+
+        .application-step { display: none; animation: fadeUp 0.35s ease; }
+        .application-step.active { display: block; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+        .form-group  { margin-bottom: 18px; }
+        .form-label  { display: block; font-size: 0.92rem; font-weight: 700; color: var(--text-dark); margin-bottom: 7px; }
+        .form-hint   { font-size: 0.82rem; color: var(--text-grey); margin-bottom: 10px; font-weight: 500; }
+        .form-input, .form-textarea { width: 100%; padding: 12px 15px; border: 2px solid var(--border-grey); border-radius: 12px; font-family: var(--font-main); font-size: 0.93rem; outline: none; transition: var(--transition); background: var(--bg-light-grey); color: var(--text-dark); }
+        .form-input:focus, .form-textarea:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 4px #EFF6FF; }
+
+        .template-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .template-btn { padding: 7px 15px; border: 1.5px solid var(--border-grey); border-radius: 30px; font-size: 0.82rem; font-weight: 700; color: var(--text-grey); background: var(--white); cursor: pointer; transition: var(--transition); font-family: var(--font-main); }
+        .template-btn:hover, .template-btn.active { border-color: var(--primary-blue); color: var(--primary-blue); background: #EFF6FF; }
+
+        .doc-list { display: flex; flex-direction: column; gap: 12px; }
+        .doc-option { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 2px solid var(--border-grey); border-radius: 14px; cursor: pointer; transition: var(--transition); background: var(--white); }
+        .doc-option:hover { border-color: #c7d2fe; transform: translateY(-1px); }
+        .doc-option.selected { border-color: var(--primary-blue); background: #EFF6FF; }
+        .doc-option-icon { width: 42px; height: 42px; background: var(--bg-light-grey); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-grey); font-size: 1.1rem; }
+        .doc-option.selected .doc-option-icon { background: var(--primary-blue); color: var(--white); }
+        .doc-option-name { font-size: 0.92rem; font-weight: 700; color: var(--text-dark); }
+        .doc-option-meta { font-size: 0.78rem; color: var(--text-grey); font-weight: 500; }
+
+        .strength-box { background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 14px; padding: 15px 17px; margin-top: 18px; }
+        .strength-title { font-size: 0.92rem; font-weight: 800; color: var(--dark-green); margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
+        .strength-text  { font-size: 0.83rem; color: #166534; font-weight: 500; line-height: 1.55; }
+        .strength-bar   { height: 6px; background: #bbf7d0; border-radius: 99px; margin-top: 10px; }
+        .strength-fill  { height: 6px; background: var(--success-green); border-radius: 99px; width: 85%; }
+
+        .review-box { background: var(--bg-light-grey); border-radius: 16px; padding: 20px; border: 1px solid var(--border-grey); margin-bottom: 18px; }
+        .review-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #D1D5DB; }
+        .review-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .review-label { font-size: 0.87rem; color: var(--text-grey); font-weight: 600; }
+        .review-value { font-size: 0.87rem; font-weight: 800; color: var(--text-dark); text-align: right; }
+
+        .confirm-check { display: flex; align-items: center; gap: 10px; background: #EFF6FF; border-radius: 12px; padding: 14px; border: 1px solid #BFDBFE; }
+        .confirm-check input { width: 18px; height: 18px; accent-color: var(--primary-blue); cursor: pointer; flex-shrink: 0; }
+        .confirm-check label { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); cursor: pointer; }
+
+        .modal-footer { padding: 18px 25px; border-top: 1px solid var(--border-grey); display: flex; justify-content: space-between; align-items: center; background: var(--bg-light-grey); }
+        .modal-step-indicator { font-size: 0.82rem; font-weight: 600; color: #9CA3AF; }
+        .modal-footer-btns { display: flex; gap: 10px; }
+
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .hidden { display: none !important; }
+
+        @media (min-width: 1024px) {
+            .menu-toggle-btn { display: none !important; }
+            .sidebar { transform: translateX(0) !important; }
+            .sidebar-overlay { display: none !important; }
+            header, .page-wrapper { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); }
+            .sidebar-header .close-sidebar { display: none; }
+            header .logo-container { display: none; }
+        }
+        @media (max-width: 1023px) {
+            .menu-toggle-btn { display: block !important; }
+            .detail-layout { grid-template-columns: 1fr; }
+            .right-sidebar  { position: static; }
+        }
+        @media (max-width: 768px) {
+            .job-hero { padding: 22px 18px; }
+            .job-hero-top { flex-direction: column; }
+            .job-hero-actions { width: 100%; }
+            .job-hero-actions .btn { flex: 1; justify-content: center; }
+            .job-hero-meta { flex-direction: column; gap: 0; }
+            .job-meta-item { border-right: none; border-bottom: 1px solid var(--border-grey); padding: 14px 0; margin-right: 0; }
+            .job-meta-item:last-child { border-bottom: none; }
+            .hide-mobile { display: none; }
+            .page-wrapper { margin-top: 65px; padding: 20px 4% 30px; }
+            .content-card { padding: 24px 20px; }
+            .sidebar-card { padding: 20px; }
+            .benefits-grid { grid-template-columns: 1fr; }
+            .similar-grid { grid-template-columns: 1fr; }
+            .modal { max-height: 100vh; height: 100vh; border-radius: 0; border: none; transform: none !important; }
+            .modal-progress { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════
+         TOAST CONTAINER
+    ═══════════════════════════════════════════ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ══════════════════════════════════════════
+         SIDEBAR
+    ═══════════════════════════════════════════ -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="seeker-dashboard.html" class="sidebar-logo">
+                <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="sidebar-brand">Swifthire</span>
+            </a>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+                <div class="sidebar-user-role">Job Seeker <span class="sidebar-user-badge">PRO</span></div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Main Menu</span>
+            <a href="seeker-dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="seeker-profile.html" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="seeker-browse-jobs.html" class="sidebar-link"><i class="fas fa-search"></i> Browse Jobs</a>
+            <a href="#" class="sidebar-link active"><i class="fas fa-file-alt"></i> Job Detail</a>
+            <a href="seeker-saved-jobs.html" class="sidebar-link"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="seeker-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> My Applications <span class="sidebar-badge" id="sidebarAppCount">0</span></a>
+            <a href="seeker-messages.html" class="sidebar-link"><i class="fas fa-envelope"></i> Messages <span class="sidebar-badge" id="sidebarMsgCount">0</span></a>
+
+            <span class="sidebar-section-label" style="margin-top:12px;">Account & Support</span>
+            <a href="seeker-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+            <a href="seeker-contact.html" class="sidebar-link"><i class="fas fa-address-book"></i> Contact</a>
+            <a href="seeker-help.html" class="sidebar-link"><i class="fas fa-question-circle"></i> Help</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-logout logout-action">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- ══════════════════════════════════════════
+         TOP HEADER
+    ═══════════════════════════════════════════ -->
+    <header id="header">
+        <div class="header-left">
+            <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="seeker-dashboard.html" class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">Swifthire</span>
+            </a>
+        </div>
+
+        <div class="header-right">
+            <a href="seeker-browse-jobs.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i> <span class="hide-mobile">Back to Jobs</span>
+            </a>
+            <a href="seeker-messages.html" class="header-icon-btn" aria-label="Messages">
+                <i class="far fa-envelope"></i>
+            </a>
+            <a href="seeker-profile.html" class="header-avatar-btn">
+                <div class="header-avatar" id="headerAvatarInit">U</div>
+                <span class="header-avatar-name" id="headerName">User</span>
+            </a>
+            <a href="#" class="header-icon-btn" onclick="showToast('Notifications coming soon!', 'info')" aria-label="Notifications">
+                <i class="far fa-bell"></i>
+                <div class="header-notif-dot" style="display:none;"></div>
+            </a>
+        </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════
+         PAGE BODY
+    ═══════════════════════════════════════════ -->
+    <main class="page-wrapper">
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="seeker-dashboard.html">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="seeker-browse-jobs.html">Browse Jobs</a>
+            <i class="fas fa-chevron-right"></i>
+            <span id="breadcrumbTitle">Loading...</span>
+        </nav>
+
+        <!-- Error State -->
+        <div id="errorState">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3 id="errorTitle">Job Not Found</h3>
+            <p id="errorText">The job you are looking for may have been closed or removed.</p>
+            <a href="seeker-browse-jobs.html" class="btn btn-outline">Return to Job Board</a>
+        </div>
+
+        <!-- ── HERO CARD ─────────────────────────── -->
+        <div class="job-hero" id="jobHero">
+            <!-- Initial Skeleton State -->
+            <div class="job-hero-top">
+                <div class="job-hero-company">
+                    <div class="job-hero-logo skeleton" style="min-width:80px;min-height:80px;"></div>
+                    <div>
+                        <div class="skeleton" style="height:26px;width:260px;margin-bottom:10px;"></div>
+                        <div class="skeleton" style="height:16px;width:180px;"></div>
+                    </div>
+                </div>
+                <div class="job-hero-actions">
+                    <div class="skeleton" style="height:44px;width:110px;border-radius:30px;"></div>
+                    <div class="skeleton" style="height:44px;width:130px;border-radius:30px;"></div>
+                </div>
+            </div>
+            <div class="hero-pills">
+                <div class="skeleton" style="height:30px;width:90px;border-radius:30px;"></div>
+                <div class="skeleton" style="height:30px;width:80px;border-radius:30px;"></div>
+                <div class="skeleton" style="height:30px;width:100px;border-radius:30px;"></div>
+            </div>
+            <div class="job-hero-meta">
+                <div class="job-meta-item">
+                    <div class="skeleton" style="width:40px;height:40px;border-radius:12px;"></div>
+                    <div>
+                        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px;"></div>
+                        <div class="skeleton" style="height:16px;width:100px;"></div>
+                    </div>
+                </div>
+                <div class="job-meta-item">
+                    <div class="skeleton" style="width:40px;height:40px;border-radius:12px;"></div>
+                    <div>
+                        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px;"></div>
+                        <div class="skeleton" style="height:16px;width:100px;"></div>
+                    </div>
+                </div>
+                <div class="job-meta-item">
+                    <div class="skeleton" style="width:40px;height:40px;border-radius:12px;"></div>
+                    <div>
+                        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px;"></div>
+                        <div class="skeleton" style="height:16px;width:120px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TWO-COLUMN BODY ───────────────────── -->
+        <div class="detail-layout" id="jobDetailLayout">
+
+            <!-- LEFT: Main Content -->
+            <div class="content-card" id="jobContent">
+                <!-- Initial Skeleton State -->
+                <div class="job-section">
+                    <div class="skeleton" style="height:22px;width:180px;margin-bottom:18px;border-radius:10px;"></div>
+                    <div class="skeleton" style="height:14px;width:100%;margin-bottom:8px;"></div>
+                    <div class="skeleton" style="height:14px;width:92%;margin-bottom:8px;"></div>
+                    <div class="skeleton" style="height:14px;width:85%;margin-bottom:8px;"></div>
+                    <div class="skeleton" style="height:14px;width:78%;"></div>
+                </div>
+                <div class="job-section">
+                    <div class="skeleton" style="height:22px;width:200px;margin-bottom:18px;border-radius:10px;"></div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div class="skeleton" style="height:48px;border-radius:12px;"></div>
+                        <div class="skeleton" style="height:48px;border-radius:12px;"></div>
+                        <div class="skeleton" style="height:48px;border-radius:12px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Sidebar -->
+            <div class="right-sidebar" id="rightSidebar">
+
+                <!-- Apply CTA -->
+                <div class="sidebar-card apply-cta-card">
+                    <h3 class="sidebar-card-title">
+                        <i class="fas fa-rocket"></i> Ready to Apply?
+                    </h3>
+                    <p class="apply-cta-text">
+                        Submit your application now. The employer typically responds within 3–5 business days.
+                    </p>
+                    <button class="btn btn-lg" id="sidebarApplyBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Apply Now
+                    </button>
+                </div>
+
+                <!-- Company Info -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-card-title">
+                        <i class="fas fa-building"></i> About the Company
+                    </h3>
+                    <div class="info-list" id="companyInfo">
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                    </div>
+                </div>
+
+                <!-- Job Overview -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-card-title">
+                        <i class="fas fa-list-check"></i> Job Overview
+                    </h3>
+                    <div class="info-list" id="jobOverview">
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                        <div class="skeleton" style="height:32px;border-radius:10px;"></div>
+                    </div>
+                </div>
+
+            </div><!-- /right-sidebar -->
+        </div><!-- /detail-layout -->
+
+        <!-- ── SIMILAR JOBS ──────────────────────── -->
+        <div class="similar-section" id="similarSection">
+            <div class="similar-section-header">
+                <h2 class="similar-section-title">Similar Jobs</h2>
+                <a href="seeker-browse-jobs.html" class="see-all-link">
+                    See all <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="similar-grid" id="similarJobs">
+                <!-- Initial Skeleton State -->
+                <div class="similar-card">
+                    <div class="similar-card-header">
+                        <div>
+                            <div class="skeleton" style="height:18px;width:160px;margin-bottom:6px;"></div>
+                            <div class="skeleton" style="height:13px;width:100px;"></div>
+                        </div>
+                        <div class="skeleton" style="width:46px;height:46px;border-radius:12px;"></div>
+                    </div>
+                    <div style="display:flex;gap:7px;margin-bottom:14px;">
+                        <div class="skeleton" style="height:24px;width:80px;border-radius:20px;"></div>
+                        <div class="skeleton" style="height:24px;width:70px;border-radius:20px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border-grey);">
+                        <div class="skeleton" style="height:18px;width:120px;"></div>
+                        <div class="skeleton" style="height:14px;width:70px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main><!-- /page-wrapper -->
+
+    <!-- ══════════════════════════════════════════
+         VANILLA JS LOGIC
+    ═══════════════════════════════════════════ -->
+    <script>
+        function showToast(message, type, duration) {
+            type = type || 'info'; duration = duration || 3500;
+            var icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span><button class="toast-close" onclick="removeToast(this.parentElement)"><i class="fas fa-times"></i></button>';
+            container.appendChild(toast);
+            setTimeout(function () { removeToast(toast); }, duration);
+        }
+        function removeToast(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.add('removing');
+            setTimeout(function () { if (toast.parentElement) toast.parentElement.removeChild(toast); }, 350);
+        }
+
+        /* Sidebar Toggle */
+        document.addEventListener('DOMContentLoaded', function () {
+            var menuBtn  = document.getElementById('menuToggleBtn');
+            var sidebar  = document.getElementById('sidebar');
+            var overlay  = document.getElementById('sidebarOverlay');
+            var closeBtn = document.getElementById('closeSidebar');
+
+            function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('show'); }
+            function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+
+            if (menuBtn)  menuBtn.addEventListener('click', openSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+            if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+            var lastY  = window.scrollY;
+            var header = document.getElementById('header');
+            window.addEventListener('scroll', function () {
+                var currY = window.scrollY;
+                if (Math.abs(currY - lastY) < 8) return;
+                header.classList.toggle('hidden', currY > lastY && currY > 70);
+                lastY = currY;
+            }, { passive: true });
+
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('apply') === 'true') {
+                var jId = urlParams.get('id');
+                if (jId) {
+                    window.location.href = 'seeker-verification.html?id=' + jId;
+                }
+            }
+        });
+
+        /* Helpers */
+        function formatCurrency(val) { 
+            if(!val) return 'Negotiable';
+            return 'KSh ' + Number(val).toLocaleString(); 
+        }
+        function formatDate(val) { 
+            if(!val) return 'N/A';
+            var d = val.toDate ? val.toDate() : new Date(val); 
+            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }); 
+        }
+        function formatRelativeTime(dateInput) {
+            if (!dateInput) return 'Recently';
+            var date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
+            var diff = Math.floor((new Date() - date) / 1000);
+            if (diff < 60) return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+        }
+        function daysUntil(val) { 
+            if(!val) return 0;
+            var d = val.toDate ? val.toDate() : new Date(val);
+            var diff = d - new Date(); 
+            return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24))); 
+        }
+
+        window.currentJob = null;
+        window.isJobSaved = false;
+
+        window.renderJobDetails = function(job) {
+            window.currentJob = job;
+            var companyName = job.companyName || job.company || 'Unknown Company';
+            var logoText = job.logo || (companyName !== 'Unknown Company' ? companyName.substring(0, 2).toUpperCase() : 'CO');
+            var days = daysUntil(job.deadline);
+
+            document.getElementById('breadcrumbTitle').textContent = job.title || 'Job Details';
+            document.title = (job.title || 'Job Details') + ' | Swifthire';
+
+            var saveBtnClass = window.isJobSaved ? 'btn-outline saved' : 'btn-outline';
+            var saveBtnIcon = window.isJobSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+            var saveBtnText = window.isJobSaved ? 'Saved' : 'Save Job';
+
+            document.getElementById('jobHero').innerHTML =
+                '<div class="job-hero-top">' +
+                    '<div class="job-hero-company">' +
+                        '<div class="job-hero-logo">' + logoText + '</div>' +
+                        '<div class="job-hero-info">' +
+                            '<h1>' + (job.title || 'Untitled Role') + '</h1>' +
+                            '<div class="job-hero-company-name"><i class="fas fa-building" style="color:var(--bright-blue);font-size:0.9rem;"></i>' + companyName + '<i class="fas fa-check-circle verified-badge" title="Verified Employer"></i></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="job-hero-actions">' +
+                        '<button class="btn ' + saveBtnClass + '" id="saveJobBtn" onclick="window.toggleSaveJob()"><i class="' + saveBtnIcon + '"></i> ' + saveBtnText + '</button>' +
+                        '<button class="btn btn-primary" onclick="window.location.href=\'seeker-verification.html?id=\' + \'' + job.id + '\'"><i class="fas fa-paper-plane"></i> Apply Now</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="hero-pills">' +
+                    '<span class="hero-pill pill-blue"><i class="fas fa-briefcase"></i> ' + (job.type || 'Full-time') + '</span>' +
+                    '<span class="hero-pill pill-purple"><i class="fas fa-laptop-house"></i> ' + (job.remote || 'Hybrid') + '</span>' +
+                    '<span class="hero-pill pill-green"><i class="fas fa-layer-group"></i> ' + (job.experience || 'Any Level') + '</span>' +
+                    '<span class="hero-pill pill-orange"><i class="fas fa-tag"></i> ' + (job.category || 'General') + '</span>' +
+                '</div>' +
+                '<div class="job-hero-meta">' +
+                    '<div class="job-meta-item"><div class="job-meta-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="job-meta-label">Location</div><div class="job-meta-value">' + (job.location || 'Remote') + '</div></div></div>' +
+                    '<div class="job-meta-item"><div class="job-meta-icon"><i class="fas fa-money-bill-wave"></i></div><div><div class="job-meta-label">Salary Range</div><div class="job-meta-value salary">' + (job.salary && job.salary.min ? formatCurrency(job.salary.min) + ' – ' + formatCurrency(job.salary.max) : 'Negotiable') + '</div></div></div>' +
+                    '<div class="job-meta-item"><div class="job-meta-icon"><i class="fas fa-calendar-times"></i></div><div><div class="job-meta-label">Apply Before</div><div class="job-meta-value">' + formatDate(job.deadline) + '</div></div></div>' +
+                    '<div class="job-meta-item"><div class="job-meta-icon"><i class="far fa-clock"></i></div><div><div class="job-meta-label">Posted</div><div class="job-meta-value">' + formatRelativeTime(job.postedAt) + '</div></div></div>' +
+                '</div>' +
+                (days > 0 && days <= 7 ? '<div class="deadline-warning" style="margin-top:20px;"><i class="fas fa-exclamation-triangle"></i>Deadline in <strong>' + days + ' day' + (days !== 1 ? 's' : '') + '</strong> — apply soon!</div>' : '');
+
+            var reqContent = '';
+            if (Array.isArray(job.requirements)) {
+                reqContent = job.requirements.join('<br>');
+            } else if (job.requirements) {
+                reqContent = String(job.requirements).replace(/\n/g, '<br>');
+            } else if (job.description) {
+                reqContent = String(job.description).replace(/\n/g, '<br>');
+            } else {
+                reqContent = 'No requirements provided.';
+            }
+
+            var skillsHtml = '';
+            if(job.skills && job.skills.length) {
+                skillsHtml = '<div class="job-section"><h2 class="section-title"><div class="section-title-icon"><i class="fas fa-laptop-code"></i></div>Skills Required</h2><div class="skills-wrap">' + job.skills.map(function(s) { return '<span class="skill-chip">' + s + '</span>'; }).join('') + '</div></div>';
+            }
+
+            var benefitsHtml = '';
+            if(job.benefits && job.benefits.length) {
+                benefitsHtml = '<div class="job-section"><h2 class="section-title"><div class="section-title-icon"><i class="fas fa-gift"></i></div>Benefits & Perks</h2><div class="benefits-grid">' + job.benefits.map(function(b) { return '<div class="benefit-item"><i class="fas ' + (b.icon || 'fa-check') + '"></i> ' + b.text + '</div>'; }).join('') + '</div></div>';
+            }
+
+            document.getElementById('jobContent').innerHTML =
+                '<div class="job-section"><h2 class="section-title"><div class="section-title-icon"><i class="fas fa-align-left"></i></div>Job Requirements</h2><div class="section-body"><p>' + reqContent + '</p></div></div>' +
+                skillsHtml + benefitsHtml;
+
+            document.getElementById('companyInfo').innerHTML =
+                '<div class="info-list-item"><i class="fas fa-map-marker-alt"></i> ' + (job.location || 'Remote') + '</div><div class="info-list-item"><i class="fas fa-industry"></i> <span>' + (job.category || 'Industry') + '</span></div>';
+
+            document.getElementById('jobOverview').innerHTML =
+                '<div class="info-list-item"><i class="fas fa-briefcase"></i> ' + (job.type || 'Full-time') + '</div><div class="info-list-item"><i class="fas fa-layer-group"></i> ' + (job.experience || 'Any Level') + '</div><div class="info-list-item"><i class="fas fa-tag"></i> ' + (job.category || 'General') + '</div><div class="info-list-item"><i class="fas fa-laptop-house"></i> ' + (job.remote || 'Hybrid') + '</div>' + (days > 0 && days <= 7 ? '<div class="deadline-warning"><i class="fas fa-exclamation-triangle"></i> Only <strong>' + days + ' day' + (days !== 1 ? 's' : '') + '</strong> left to apply!</div>' : '');
+
+            var applyBtn = document.getElementById('sidebarApplyBtn');
+            if (applyBtn) {
+                applyBtn.disabled = false;
+                applyBtn.onclick = function() {
+                    window.location.href = 'seeker-verification.html?id=' + job.id;
+                };
+            }
+        }
+
+        window.renderSimilarJobs = function(jobs) {
+            var container = document.getElementById('similarJobs');
+            if(!jobs || jobs.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-grey);padding:20px;">No similar jobs found.</div>';
+                return;
+            }
+            
+            container.innerHTML = jobs.map(function (j) {
+                var companyName = j.companyName || j.company || 'Unknown';
+                var logo = j.logo || (companyName !== 'Unknown' ? companyName.substring(0, 2).toUpperCase() : 'CO');
+                return '<div class="similar-card" onclick="window.location.href=\'seeker-job-detail.html?id=' + j.id + '\'"><div class="similar-card-header"><div><div class="similar-card-title">' + (j.title || 'Untitled') + '</div><div class="similar-card-company">' + companyName + '</div></div><div class="similar-card-logo">' + logo + '</div></div><div class="similar-card-pills"><span class="similar-card-pill"><i class="fas fa-map-marker-alt"></i>' + (j.location || 'Remote') + '</span><span class="similar-card-pill"><i class="fas fa-briefcase"></i>' + (j.type || 'Full-time') + '</span><span class="similar-card-pill"><i class="fas fa-laptop-house"></i>' + (j.remote || 'Hybrid') + '</span></div><div class="similar-card-footer"><span class="similar-salary">' + (j.salary && j.salary.min ? formatCurrency(j.salary.min) + ' – ' + formatCurrency(j.salary.max) : 'Negotiable') + '</span><span class="similar-posted"><i class="far fa-clock"></i> ' + formatRelativeTime(j.postedAt) + '</span></div></div>';
+            }).join('');
+        }
+    </script>
+
+    <!-- ══════════════════════════════════════════
+         FIREBASE & AUTHENTICATION MODULE
+    ═══════════════════════════════════════════ -->
+    <script type="module">
+        import { auth, db } from './config.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { doc, getDoc, collection, query, where, limit, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        let currentUser = null;
+        let currentUserData = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!jobId) {
+                window.showToast("No job ID provided.", "error");
+                document.getElementById('jobHero').style.display = 'none';
+                document.getElementById('jobDetailLayout').style.display = 'none';
+                document.getElementById('similarSection').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                return;
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    try {
+                        const userDocRef = doc(db, "users", user.uid);
+                        const userDocSnap = await getDoc(userDocRef);
+                        
+                        let fullName = "Job Seeker";
+                        if (userDocSnap.exists()) {
+                            currentUserData = userDocSnap.data();
+                            fullName = currentUserData.fullName || currentUserData.name || "Job Seeker";
+                        } else {
+                            fullName = user.displayName || "Job Seeker";
+                        }
+
+                        const nameParts = fullName.trim().split(" ");
+                        let initials = "U";
+                        if (nameParts.length > 1) {
+                            initials = nameParts[0].charAt(0).toUpperCase() + nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+                        } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                            initials = nameParts[0].charAt(0).toUpperCase();
+                        }
+
+                        const sidebarName = document.getElementById("sidebarName");
+                        if(sidebarName) sidebarName.textContent = fullName;
+                        
+                        const sidebarAvatar = document.getElementById("sidebarAvatarInit");
+                        if(sidebarAvatar) sidebarAvatar.textContent = initials;
+                        
+                        const headerName = document.getElementById("headerName");
+                        if(headerName) headerName.textContent = fullName.split(" ")[0]; 
+                        
+                        const headerAvatar = document.getElementById("headerAvatarInit");
+                        if(headerAvatar) headerAvatar.textContent = initials;
+                        
+                        setupRealtimeListeners(user);
+
+                    } catch (error) {
+                        console.error("Error fetching user data:", error);
+                    }
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+
+            document.querySelectorAll('.logout-action').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
+                    signOut(auth).then(() => {
+                        window.location.href = 'index.html';
+                    }).catch((error) => {
+                        console.error('Logout error:', error);
+                        alert('Error signing out. Please try again.');
+                        btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
+                    });
+                });
+            });
+        });
+
+        function setupRealtimeListeners(user) {
+            const jobRef = doc(db, "jobs", jobId);
+            onSnapshot(jobRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const jobData = docSnap.data();
+                    jobData.id = docSnap.id;
+                    window.renderJobDetails(jobData);
+
+                    if (jobData.category) {
+                        const similarQuery = query(
+                            collection(db, "jobs"),
+                            where("category", "==", jobData.category),
+                            limit(4)
+                        );
+                        onSnapshot(similarQuery, (simSnap) => {
+                            const simJobs = [];
+                            simSnap.forEach(sDoc => {
+                                if (sDoc.id !== jobId) {
+                                    const sData = sDoc.data();
+                                    sData.id = sDoc.id;
+                                    simJobs.push(sData);
+                                }
+                            });
+                            window.renderSimilarJobs(simJobs.slice(0, 3));
+                        });
+                    } else {
+                        window.renderSimilarJobs([]);
+                    }
+                } else {
+                    window.showToast("Job not found or has been removed.", "error");
+                    document.getElementById('jobHero').style.display = 'none';
+                    document.getElementById('jobDetailLayout').style.display = 'none';
+                    document.getElementById('similarSection').style.display = 'none';
+                    document.getElementById('errorState').style.display = 'block';
+                }
+            });
+
+            const savedJobRef = doc(db, "users", user.uid, "savedJobs", jobId);
+            onSnapshot(savedJobRef, (docSnap) => {
+                window.isJobSaved = docSnap.exists();
+                if (window.currentJob) {
+                    const btn = document.getElementById('saveJobBtn');
+                    if (btn) {
+                        if (window.isJobSaved) {
+                            btn.classList.add('saved');
+                            btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                        } else {
+                            btn.classList.remove('saved');
+                            btn.innerHTML = '<i class="far fa-bookmark"></i> Save Job';
+                        }
+                    }
+                }
+            });
+
+            const appsQuery = query(collection(db, "applications"), where("userId", "==", user.uid));
+            onSnapshot(appsQuery, (snap) => {
+                const badge = document.getElementById('sidebarAppCount');
+                if (badge) badge.textContent = snap.size;
+            });
+        }
+
+        window.toggleSaveJob = async function() {
+            if (!currentUser || !jobId) return;
+            const btn = document.getElementById('saveJobBtn');
+            const savedJobRef = doc(db, "users", currentUser.uid, "savedJobs", jobId);
+            
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                if (window.isJobSaved) {
+                    await deleteDoc(savedJobRef);
+                    window.showToast('Job removed from saved.', 'info');
+                } else {
+                    await setDoc(savedJobRef, { savedAt: serverTimestamp() });
+                    window.showToast('Job saved to your list!', 'success');
+                }
+            } catch (error) {
+                console.error("Error toggling save job:", error);
+                window.showToast('Error updating saved jobs.', 'error');
+            }
+        };
+    </script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

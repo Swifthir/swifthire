@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">Admin Dashboard | Swifthire</title>
+  
+  <meta name="description" content="Admin Dashboard - Swifthire">
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --dark-green: #047857; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --shadow-hover: 0 20px 40px rgba(0,0,0,0.08);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-x: hidden; 
+        padding-bottom: 40px; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: transform 0.3s ease, width 0.3s, left 0.3s; 
+    }
+    header.hidden { transform: translateY(-100%); }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; }
+    
+    .header-user-info { display: flex; flex-direction: column; text-align: right; margin-right: 5px; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; justify-content: center; gap: 8px; 
+        transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+    /* Sidebar Admin Profile Card */
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px;
+        background: var(--gradient-blue); color: white; 
+        font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { 
+        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; 
+        color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; text-align: left; 
+    }
+    .sidebar-link { 
+        display: flex; align-items: center; justify-content: flex-start; gap: 14px; 
+        padding: 13px 20px; color: var(--text-grey); text-decoration: none; 
+        font-weight: 600; font-size: 0.95rem; transition: var(--transition); 
+        border-right: 4px solid transparent; margin: 0 8px; border-radius: 12px; 
+    }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { 
+        color: var(--primary-blue); background: #EFF6FF; 
+        border-right-color: var(--bright-blue); 
+    }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    /* ── LAYOUT ── */
+    .dashboard-container { 
+        margin-top: 80px; padding: 20px; width: 100%; 
+        max-width: 1400px; transition: var(--transition); margin-left: 0; 
+    }
+
+    /* ── HERO BANNER ── */
+    .hero-banner { 
+        background: var(--gradient-blue); 
+        border-radius: 24px; padding: 28px 30px; 
+        margin-bottom: 28px; position: relative; overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,204,0.25); 
+    }
+    .hero-banner::before { 
+        content: ''; position: absolute; top: -40px; right: -40px; 
+        width: 200px; height: 200px; background: rgba(255,255,255,0.06); 
+        border-radius: 50%; 
+    }
+    .hero-banner::after { 
+        content: ''; position: absolute; bottom: -60px; right: 100px; 
+        width: 150px; height: 150px; background: rgba(255,255,255,0.04); 
+        border-radius: 50%; 
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-live-badge { 
+        display: inline-flex; align-items: center; gap: 6px; 
+        background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.95); 
+        font-size: 0.75rem; font-weight: 700; padding: 5px 12px; 
+        border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.2); 
+        backdrop-filter: blur(4px); 
+    }
+    .hero-live-dot { 
+        width: 7px; height: 7px; background: #4ADE80; 
+        border-radius: 50%; animation: pulse-dot 2s infinite; 
+    }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+    
+    .hero-title { 
+        font-family: var(--font-serif); font-size: 1.8rem; 
+        color: white; margin-bottom: 6px; line-height: 1.2; 
+    }
+    .hero-subtitle { color: rgba(255,255,255,0.8); font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; }
+    
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 20px; }
+    .hero-meta-item { display: flex; align-items: center; gap: 8px; }
+    .hero-meta-item i { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .hero-meta-item span { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 600; }
+    .hero-meta-value { color: white; font-weight: 800; }
+
+    /* ── STATS GRID ── */
+    .stats-grid-4 { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
+    .stat-card { 
+        background: var(--white); border-radius: 20px; padding: 20px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        transition: var(--transition); text-align: left; 
+        display: flex; flex-direction: column; align-items: flex-start; 
+        position: relative; overflow: hidden; 
+    }
+    .stat-card::after { 
+        content: ''; position: absolute; bottom: 0; left: 0; right: 0; 
+        height: 3px; background: var(--gradient-blue); 
+        transform: scaleX(0); transform-origin: left; transition: var(--transition); 
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: #BFDBFE; }
+    .stat-card:hover::after { transform: scaleX(1); }
+    
+    .stat-icon { 
+        width: 50px; height: 50px; border-radius: 14px; 
+        display: flex; align-items: center; justify-content: center; 
+        margin-bottom: 16px; font-size: 1.3rem; transition: var(--transition); 
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+    .stat-icon-primary { background: #EFF6FF; color: var(--primary-blue); }
+    .stat-icon-secondary { background: #F3E8FF; color: #9333EA; }
+    .stat-icon-success { background: #ECFDF5; color: #10B981; }
+    .stat-icon-warning { background: #FFFBEB; color: #F59E0B; }
+
+    .stat-value { 
+        font-size: 2rem; font-weight: 800; color: var(--text-dark); 
+        line-height: 1.1; margin-bottom: 4px; font-family: var(--font-main); 
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-grey); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── BUTTONS ── */
+    .btn-outline { 
+        background: transparent; border: 2px solid var(--border-grey); 
+        padding: 8px 16px; border-radius: 30px; font-weight: 700; 
+        color: var(--text-dark); cursor: pointer; transition: var(--transition); 
+        display: inline-flex; align-items: center; justify-content: center; 
+        gap: 8px; font-family: var(--font-main); font-size: 0.85rem; text-decoration: none; 
+    }
+    .btn-outline:hover { background: var(--bg-light-grey); border-color: var(--primary-blue); color: var(--primary-blue); }
+    .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+
+    /* ── CARDS ── */
+    .admin-card { 
+        background: var(--white); border-radius: 20px; padding: 20px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        transition: var(--transition); text-align: left; 
+    }
+    .admin-card:hover { border-color: #BFDBFE; box-shadow: var(--shadow-hover); }
+    .admin-card-header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 20px; flex-wrap: wrap; gap: 10px; 
+    }
+    .admin-card-title { 
+        font-family: var(--font-serif); font-size: 1.15rem; 
+        font-weight: 700; color: var(--text-dark); margin: 0; 
+    }
+
+    /* ── TABLES ── */
+    .table-responsive { 
+        width: 100%; max-width: 100%; overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; border: 1px solid var(--border-grey); 
+        border-radius: 16px; background: var(--white); 
+    }
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 100%; text-align: left; }
+    .admin-table th { 
+        padding: 13px 16px; font-size: 0.75rem; font-weight: 700; 
+        text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-grey); 
+        border-bottom: 1px solid var(--border-grey); background: var(--bg-light-grey); 
+        white-space: nowrap; 
+    }
+    .admin-table th:first-child { border-radius: 16px 0 0 0; }
+    .admin-table th:last-child { border-radius: 0 16px 0 0; }
+    .admin-table td { 
+        padding: 14px 16px; font-size: 0.88rem; color: var(--text-dark); 
+        border-bottom: 1px solid var(--bg-light-grey); vertical-align: middle; 
+        font-weight: 500; white-space: nowrap; 
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr { transition: var(--transition); }
+    .admin-table tbody tr:hover td { background: #F8FAFC; }
+
+    /* Applicant cell with mini avatar */
+    .applicant-cell { display: flex; align-items: center; gap: 10px; }
+    .mini-avatar { 
+        width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); 
+        color: white; display: flex; align-items: center; justify-content: center; 
+        font-size: 0.7rem; font-weight: 800; flex-shrink: 0; 
+    }
+
+    /* ── BADGES ── */
+    .badge { 
+        padding: 5px 11px; border-radius: 30px; font-size: 0.72rem; 
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; 
+        display: inline-flex; align-items: center; gap: 4px; 
+    }
+    .badge-primary { background: #EFF6FF; color: var(--primary-blue); border: 1px solid #BFDBFE; }
+    .badge-success { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .badge-warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+
+    /* ── LAYOUT GRIDS ── */
+    .admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; }
+    .admin-grid > div { min-width: 0; max-width: 100%; }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quick-action-btn { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        gap: 10px; padding: 18px 12px; 
+        background: var(--bg-light-grey); border-radius: 16px; 
+        transition: var(--transition); text-decoration: none; 
+        border: 1px solid var(--border-grey); text-align: center; 
+    }
+    .quick-action-btn:hover { 
+        background: var(--white); border-color: var(--primary-blue); 
+        transform: translateY(-3px); box-shadow: var(--shadow-card); 
+    }
+    .quick-action-btn-icon { 
+        width: 46px; height: 46px; background: var(--white); border-radius: 14px; 
+        display: flex; align-items: center; justify-content: center; 
+        color: var(--primary-blue); box-shadow: var(--shadow-sm); 
+        transition: var(--transition); font-size: 1.15rem; 
+    }
+    .quick-action-btn:hover .quick-action-btn-icon { background: var(--gradient-blue); color: var(--white); transform: scale(1.1); }
+    .quick-action-btn span { font-size: 0.82rem; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
+
+    /* ── VERIFICATION LIST ── */
+    .verification-item { 
+        display: flex; align-items: center; justify-content: space-between; 
+        padding: 14px; background: var(--bg-light-grey); 
+        border-radius: 16px; margin-bottom: 10px; 
+        border: 1px solid var(--border-grey); transition: var(--transition); gap: 10px; 
+    }
+    .verification-item:last-child { margin-bottom: 0; }
+    .verification-item:hover { border-color: #BFDBFE; background: var(--white); transform: translateX(4px); box-shadow: var(--shadow-sm); }
+    .verification-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .avatar { 
+        width: 44px; height: 44px; background: var(--gradient-blue); 
+        border-radius: 50%; color: white; display: flex; align-items: center; 
+        justify-content: center; font-weight: 800; font-size: 0.9rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.2); flex-shrink: 0; 
+    }
+    .verification-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .verification-type { font-size: 0.78rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── ACTIVITY FEED ── */
+    .activity-feed { display: flex; flex-direction: column; gap: 0; }
+    .activity-item { 
+        display: flex; gap: 14px; padding: 14px 0; 
+        border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .activity-dot-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 3px; }
+    .activity-dot { 
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; 
+        box-shadow: 0 0 0 3px rgba(0,0,204,0.12); 
+    }
+    .activity-dot-line { width: 2px; flex: 1; background: var(--border-grey); margin-top: 4px; min-height: 20px; }
+    .activity-item:last-child .activity-dot-line { display: none; }
+    .activity-dot-blue { background: var(--primary-blue); }
+    .activity-dot-green { background: var(--success-green); }
+    .activity-dot-purple { background: #9333EA; }
+    .activity-dot-orange { background: #F59E0B; }
+    .activity-text { font-size: 0.85rem; color: var(--text-dark); font-weight: 600; margin-bottom: 3px; }
+    .activity-time { font-size: 0.75rem; color: var(--text-grey); font-weight: 500; }
+
+    /* ── PLATFORM HEALTH ── */
+    .health-item { margin-bottom: 16px; }
+    .health-item:last-child { margin-bottom: 0; }
+    .health-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .health-label { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+    .health-value { font-size: 0.85rem; font-weight: 800; color: var(--primary-blue); }
+    .health-bar { height: 8px; background: var(--bg-light-grey); border-radius: 20px; overflow: hidden; }
+    .health-bar-fill { height: 100%; border-radius: 20px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .health-bar-blue { background: var(--gradient-blue); }
+    .health-bar-green { background: linear-gradient(90deg, #10B981, #34D399); }
+    .health-bar-purple { background: linear-gradient(90deg, #9333EA, #A855F7); }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 24px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { 
+        background: var(--white); border-radius: 14px; padding: 14px 18px; 
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12); border-left: 4px solid var(--primary-blue); 
+        display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: 340px; 
+        animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1); 
+    }
+    .toast.success { border-left-color: var(--success-green); }
+    .toast.warning { border-left-color: #F59E0B; }
+    @keyframes toastIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .toast-msg { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+    .toast-close { margin-left: auto; background: none; border: none; color: var(--text-grey); cursor: pointer; font-size: 1rem; }
+
+    /* ── RESPONSIVE ── */
+    @media (min-width: 600px) {
+        .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .dashboard-container { margin-left: 280px; width: calc(100% - 280px); padding: 30px 40px; }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+        .admin-grid { grid-template-columns: 2fr 1fr; }
+        .stats-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .admin-card { padding: 24px; }
+        .hero-title { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Navigation Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Admin Profile in Sidebar -->
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="sidebarAvatar">AU</div>
+      <div>
+        <div class="sidebar-profile-name" id="sidebarName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+
+    <!-- Updated Sidebar Navigation -->
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link">
+        <i class="fas fa-user-circle"></i> Profile
+      </a>
+      <a href="admin-dashboard.html" class="sidebar-link active">
+        <i class="fas fa-th-large"></i> Dashboard
+      </a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link">
+        <i class="fas fa-briefcase"></i> Job Management
+      </a>
+      <a href="admin-applications.html" class="sidebar-link">
+        <i class="fas fa-folder-open"></i> Applications
+      </a>
+      <a href="admin-user-directory.html" class="sidebar-link">
+        <i class="fas fa-users"></i> User Directory
+      </a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link">
+        <i class="fas fa-list-alt"></i> Logs
+      </a>
+      <a href="admin-reports.html" class="sidebar-link">
+        <i class="fas fa-chart-line"></i> Reports
+      </a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link">
+        <i class="fas fa-headset"></i> Support
+      </a>
+      <a href="admin-settings.html" class="sidebar-link">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Top Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-left" style="gap:12px;">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerUserName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+        <span style="display:none;" id="logoutText">Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-container">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-content">
+        <div class="hero-live-badge">
+          <span class="hero-live-dot"></span>
+          Live Dashboard
+        </div>
+        <h1 class="hero-title">Admin Dashboard</h1>
+        <p class="hero-subtitle">Platform overview · Real-time metrics · Quick controls</p>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <i class="fas fa-calendar-day"></i>
+            <span id="heroDashDate">Loading...</span>
+          </div>
+          <div class="hero-meta-item">
+            <i class="fas fa-clock"></i>
+            <span id="heroDashTime">Loading...</span>
+          </div>
+          <div class="hero-meta-item">
+            <i class="fas fa-server"></i>
+            <span>System <span class="hero-meta-value">Operational</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid-4">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-primary"><i class="fas fa-users"></i></div>
+        <div class="stat-value" id="statTotalUsers">0</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-secondary"><i class="fas fa-briefcase"></i></div>
+        <div class="stat-value" id="statActiveJobs">0</div>
+        <div class="stat-label">Active Jobs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-success"><i class="fas fa-folder-open"></i></div>
+        <div class="stat-value" id="statApplications">0</div>
+        <div class="stat-label">Applications</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-warning"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-value" id="statRevenue">KSh 0</div>
+        <div class="stat-label">Revenue</div>
+      </div>
+    </div>
+
+    <!-- Main Admin Grid -->
+    <div class="admin-grid">
+
+      <!-- LEFT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+
+        <!-- Recent Applications -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Recent Applications</h3>
+            <a href="admin-applications.html" class="btn-outline btn-sm">
+              <i class="fas fa-arrow-right"></i> View All
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Job</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recentApplicationsBody">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-grey);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Recent Job Postings</h3>
+            <a href="admin-job-management.html" class="btn-outline btn-sm">
+              <i class="fas fa-arrow-right"></i> View All
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Applications</th>
+                  <th>Status</th>
+                  <th>Posted</th>
+                </tr>
+              </thead>
+              <tbody id="recentJobsBody">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-grey);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Platform Health -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Platform Health</h3>
+            <span class="badge badge-success">All Systems Normal</span>
+          </div>
+          <div class="health-item">
+            <div class="health-header">
+              <span class="health-label"><i class="fas fa-users" style="margin-right:6px;color:var(--primary-blue);"></i>User Retention</span>
+              <span class="health-value">84%</span>
+            </div>
+            <div class="health-bar"><div class="health-bar-fill health-bar-blue" style="width:84%;"></div></div>
+          </div>
+          <div class="health-item">
+            <div class="health-header">
+              <span class="health-label"><i class="fas fa-check-double" style="margin-right:6px;color:#10B981;"></i>Application Success Rate</span>
+              <span class="health-value" style="color:#10B981;">72%</span>
+            </div>
+            <div class="health-bar"><div class="health-bar-fill health-bar-green" style="width:72%;"></div></div>
+          </div>
+          <div class="health-item">
+            <div class="health-header">
+              <span class="health-label"><i class="fas fa-star" style="margin-right:6px;color:#9333EA;"></i>Premium Conversion</span>
+              <span class="health-value" style="color:#9333EA;">38%</span>
+            </div>
+            <div class="health-bar"><div class="health-bar-fill health-bar-purple" style="width:38%;"></div></div>
+          </div>
+        </div>
+
+      </div><!-- /LEFT COLUMN -->
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+
+        <!-- Quick Actions -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Quick Actions</h3>
+          </div>
+          <div class="quick-actions-grid">
+            <a href="admin-job-management.html" class="quick-action-btn">
+              <div class="quick-action-btn-icon"><i class="fas fa-plus"></i></div>
+              <span>Post Job</span>
+            </a>
+            <a href="admin-user-directory.html" class="quick-action-btn">
+              <div class="quick-action-btn-icon"><i class="fas fa-users"></i></div>
+              <span>Manage Users</span>
+            </a>
+            <a href="admin-reports.html" class="quick-action-btn">
+              <div class="quick-action-btn-icon"><i class="fas fa-chart-pie"></i></div>
+              <span>Reports</span>
+            </a>
+            <a href="admin-applications.html" class="quick-action-btn">
+              <div class="quick-action-btn-icon"><i class="fas fa-folder-open"></i></div>
+              <span>Applications</span>
+            </a>
+            <a href="admin-settings.html" class="quick-action-btn">
+              <div class="quick-action-btn-icon"><i class="fas fa-cog"></i></div>
+              <span>Settings</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Pending Verifications -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Pending Verifications</h3>
+          </div>
+          <div id="pendingVerificationsContainer">
+            <div style="padding:15px;text-align:center;color:var(--text-grey);">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">Recent Activity</h3>
+          </div>
+          <div class="activity-feed" id="recentActivityContainer">
+            <div style="padding:15px;text-align:center;color:var(--text-grey);">Loading...</div>
+          </div>
+        </div>
+
+      </div><!-- /RIGHT COLUMN -->
+
+    </div><!-- /admin-grid -->
+
+  </main>
+
+  <!-- UI Logic -->
+  <script>
+    // Sidebar Toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
+
+        function toggleSidebar() {
+            if (sidebar) sidebar.classList.toggle('open');
+            if (sidebarOverlay) sidebarOverlay.classList.toggle('show');
+        }
+
+        if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+        if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+        if (sidebarOverlay) sidebarOverlay.onclick = toggleSidebar;
+        
+        // Hide header on scroll
+        let lastY = window.scrollY;
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', function() {
+            const currY = window.scrollY;
+            if(Math.abs(currY - lastY) < 10) return;
+            if(currY > lastY && currY > 60) header.classList.add('hidden');
+            else header.classList.remove('hidden');
+            lastY = currY;
+        }, {passive:true});
+
+        // Update hero date/time
+        function updateHeroDateTime() {
+            const now = new Date();
+            const dateEl = document.getElementById('heroDashDate');
+            const timeEl = document.getElementById('heroDashTime');
+            if(dateEl) dateEl.textContent = now.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+            if(timeEl) timeEl.textContent = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+        }
+        updateHeroDateTime();
+        setInterval(updateHeroDateTime, 60000);
+
+        // Animate health bars
+        setTimeout(() => {
+            document.querySelectorAll('.health-bar-fill').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => bar.style.width = width, 100);
+            });
+        }, 400);
+    });
+
+    // Toast System
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if(!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'fa-info-circle';
+        if(type === 'success') icon = 'fa-check-circle';
+        else if(type === 'warning') icon = 'fa-exclamation-triangle';
+        
+        toast.innerHTML = `
+            <i class="fas ${icon} toast-icon" style="color:${type==='success'?'#10B981':type==='warning'?'#F59E0B':'var(--primary-blue)'}"></i>
+            <span class="toast-msg">${message}</span>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+        `;
+        
+        container.appendChild(toast);
+        
+        toast.querySelector('.toast-close').onclick = () => {
+            toast.style.animation = 'toastIn 0.3s reverse';
+            setTimeout(() => toast.remove(), 300);
+        };
+        
+        setTimeout(() => {
+            if(toast.parentNode) {
+                toast.style.animation = 'toastIn 0.3s reverse';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+  </script>
+
+  <!-- FIREBASE & AUTH LOGIC INLINED -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, orderBy, limit, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+      authDomain: "skilllink69-122aa.firebaseapp.com",
+      projectId: "skilllink69-122aa",
+      storageBucket: "skilllink69-122aa.firebasestorage.app",
+      messagingSenderId: "673456146518",
+      appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+      measurementId: "G-H69LL8HKYQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index for real-time listener features:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `Admin Dashboard | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, (error) => {
+                console.error("Config Listener Error:", error);
+                showIndexError(error);
+            });
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    function setupRealtimeListeners() {
+        // 1. Stats
+        onSnapshot(collection(db, 'users'), snap => {
+            document.getElementById('statTotalUsers').textContent = snap.size.toLocaleString();
+        }, error => {
+            console.error("Users Stat Error:", error);
+            showIndexError(error);
+        });
+
+        onSnapshot(query(collection(db, 'jobs'), where('status', '!=', 'Closed')), snap => {
+            document.getElementById('statActiveJobs').textContent = snap.size.toLocaleString();
+        }, error => {
+            console.error("Active Jobs Stat Error:", error);
+            showIndexError(error);
+        });
+
+        onSnapshot(collection(db, 'applications'), snap => {
+            document.getElementById('statApplications').textContent = snap.size.toLocaleString();
+        }, error => {
+            console.error("Applications Stat Error:", error);
+            showIndexError(error);
+        });
+
+        onSnapshot(collection(db, 'payments'), snap => {
+            let total = 0;
+            snap.forEach(doc => total += (doc.data().amount || 0));
+            document.getElementById('statRevenue').textContent = 'KSh ' + total.toLocaleString();
+        }, error => {
+            console.error("Revenue Stat Error:", error);
+            showIndexError(error);
+        });
+
+        // 2. Recent Applications
+        onSnapshot(query(collection(db, 'applications'), orderBy('createdAt', 'desc'), limit(4)), snap => {
+            const tbody = document.getElementById('recentApplicationsBody');
+            tbody.innerHTML = '';
+            if(snap.empty) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-grey);">No recent applications</td></tr>';
+                return;
+            }
+            snap.forEach(doc => {
+                const data = doc.data();
+                const date = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'N/A';
+                const name = data.applicantName || 'Unknown';
+                const initials = name.substring(0,2).toUpperCase();
+                tbody.innerHTML += `
+                    <tr>
+                      <td>
+                        <div class="applicant-cell">
+                          <div class="mini-avatar">${initials}</div>
+                          ${name}
+                        </div>
+                      </td>
+                      <td>${data.jobTitle || 'N/A'}</td>
+                      <td><span class="badge badge-primary">${data.status || 'New'}</span></td>
+                      <td>${date}</td>
+                    </tr>
+                `;
+            });
+        }, error => {
+            console.error("Recent Applications Error:", error);
+            showIndexError(error);
+        });
+
+        // 3. Recent Jobs
+        onSnapshot(query(collection(db, 'jobs'), orderBy('createdAt', 'desc'), limit(4)), snap => {
+            const tbody = document.getElementById('recentJobsBody');
+            tbody.innerHTML = '';
+            if(snap.empty) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-grey);">No recent jobs</td></tr>';
+                return;
+            }
+            snap.forEach(doc => {
+                const data = doc.data();
+                const date = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'N/A';
+                const statusClass = data.status === 'Active' ? 'badge-success' : 'badge-warning';
+                tbody.innerHTML += `
+                    <tr>
+                      <td>${data.title || 'Untitled'}</td>
+                      <td><strong style="color:var(--primary-blue);">${data.applicationCount || 0}</strong></td>
+                      <td><span class="badge ${statusClass}">${data.status || 'Active'}</span></td>
+                      <td>${date}</td>
+                    </tr>
+                `;
+            });
+        }, error => {
+            console.error("Recent Jobs Error:", error);
+            showIndexError(error);
+        });
+
+        // 4. Pending Verifications
+        onSnapshot(query(collection(db, 'verifications'), where('status', '==', 'pending'), limit(3)), snap => {
+            const container = document.getElementById('pendingVerificationsContainer');
+            container.innerHTML = '';
+            if(snap.empty) {
+                container.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-grey);">No pending verifications</div>';
+                return;
+            }
+            snap.forEach(doc => {
+                const data = doc.data();
+                const name = data.userName || 'Unknown User';
+                const initials = name.substring(0,2).toUpperCase();
+                container.innerHTML += `
+                    <div class="verification-item">
+                      <div class="verification-info">
+                        <div class="avatar">${initials}</div>
+                        <div>
+                          <div class="verification-name">${name}</div>
+                          <div class="verification-type"><i class="fas fa-id-card" style="margin-right:4px;"></i>${data.type || 'ID Verification'}</div>
+                        </div>
+                      </div>
+                      <button class="btn-primary btn-sm">Review</button>
+                    </div>
+                `;
+            });
+        }, error => {
+            console.error("Pending Verifications Error:", error);
+            showIndexError(error);
+        });
+
+        // 5. Recent Activity
+        onSnapshot(query(collection(db, 'activityLogs'), orderBy('createdAt', 'desc'), limit(4)), snap => {
+            const container = document.getElementById('recentActivityContainer');
+            container.innerHTML = '';
+            if(snap.empty) {
+                container.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-grey);">No recent activity</div>';
+                return;
+            }
+            snap.forEach(doc => {
+                const data = doc.data();
+                let timeStr = 'Just now';
+                if(data.createdAt) {
+                    const diff = Math.floor((new Date() - data.createdAt.toDate()) / 60000);
+                    if(diff < 60) timeStr = diff + ' mins ago';
+                    else if(diff < 1440) timeStr = Math.floor(diff/60) + ' hours ago';
+                    else timeStr = Math.floor(diff/1440) + ' days ago';
+                }
+                
+                let dotClass = 'activity-dot-blue';
+                if(data.type === 'job') dotClass = 'activity-dot-green';
+                else if(data.type === 'payment') dotClass = 'activity-dot-purple';
+                else if(data.type === 'system') dotClass = 'activity-dot-orange';
+
+                container.innerHTML += `
+                    <div class="activity-item">
+                      <div class="activity-dot-wrap">
+                        <div class="activity-dot ${dotClass}"></div>
+                        <div class="activity-dot-line"></div>
+                      </div>
+                      <div>
+                        <div class="activity-text"><span>${data.userName || 'System'}</span> ${data.action || 'performed an action'}</div>
+                        <div class="activity-time">${timeStr}</div>
+                      </div>
+                    </div>
+                `;
+            });
+        }, error => {
+            console.error("Recent Activity Error:", error);
+            showIndexError(error);
+        });
+    }
+
+    // Check Auth Status & Admin Role
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                    // Update Sidebar & Header
+                    const firstName = uDoc.data().fullName || uDoc.data().firstName || 'Admin';
+                    document.getElementById('sidebarName').textContent = firstName;
+                    document.getElementById('headerUserName').textContent = firstName;
+                    document.getElementById('sidebarAvatar').textContent = firstName.charAt(0).toUpperCase();
+
+                    loadAppConfig(); // Load branding after auth is verified
+                    setupRealtimeListeners();
+                } else {
+                    window.location.href = "index.html";
+                }
+            } catch(e) { 
+                console.error("Error fetching user data:", e);
+                window.location.href = "index.html"; 
+            }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    // Handle Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            window.location.href = "index.html";
+        }).catch((error) => {
+            showToast("Error logging out", "warning");
+        });
+    });
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

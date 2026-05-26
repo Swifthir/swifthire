@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Settings | Swifthire</title>
+
+    <!-- PWA Manifest & Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0000CC">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════
+           DESIGN TOKENS
+        ══════════════════════════════════════ */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg, #0000CC, #3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --warning-amber:  #F59E0B;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --purple-accent:  #8B5CF6;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            
+            --shadow-sm:      0 2px 8px  rgba(0,0,0,0.06);
+            --shadow-card:    0 10px 30px rgba(0,0,0,0.07);
+            --shadow-hover:   0 20px 50px rgba(0,0,204,0.14);
+            --transition:     all 0.3s cubic-bezier(0.4,0,0.2,1);
+            --radius-card:    22px;
+            --radius-btn:     14px;
+            --sidebar-w:      280px;
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-grey);
+            background: #F8FAFC;
+            background-image:
+                radial-gradient(at 0%   0%,   hsla(210,100%,95%,0.9) 0, transparent 50%),
+                radial-gradient(at 100% 100%,  hsla(160,100%,95%,0.7) 0, transparent 50%),
+                radial-gradient(at 50%  50%,   hsla(220,100%,97%,0.5) 0, transparent 60%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        /* ══════════════════════════════════════
+           TOAST SYSTEM
+        ══════════════════════════════════════ */
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 14px; font-family: var(--font-main); font-size: 0.9rem; font-weight: 600; color: var(--white); min-width: 280px; max-width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); pointer-events: all; animation: toastIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .toast.removing { animation: toastOut 0.35s ease forwards; }
+        .toast.success  { background: linear-gradient(135deg,#10B981,#059669); }
+        .toast.error    { background: linear-gradient(135deg,#EF4444,#DC2626); }
+        .toast.info     { background: linear-gradient(135deg,#3b5bfb,#0000CC); }
+        @keyframes toastIn  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes toastOut { from{opacity:1;transform:translateX(0)}    to{opacity:0;transform:translateX(40px)} }
+        .toast-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.75); cursor: pointer; font-size: 0.9rem; padding: 2px 4px; transition: var(--transition); }
+        .toast-close:hover { color: var(--white); }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--white); box-shadow: 4px 0 24px rgba(0,0,0,0.06); z-index: 2000; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey); }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { padding: 28px 24px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); background: linear-gradient(135deg, #EFF6FF, #F8FAFC); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 38px; height: 38px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 34px; height: 34px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 0.9rem; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .sidebar-user { padding: 20px 24px; border-bottom: 1px solid var(--border-grey); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,204,0.25); }
+        .sidebar-user-info { flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-weight: 800; color: var(--text-dark); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+        .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 2px; flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-left: 3px solid transparent; position: relative; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); border-left-color: rgba(0,0,204,0.3); }
+        .sidebar-link.active { color: var(--primary-blue); background: linear-gradient(90deg, #EFF6FF, #F8FAFC); border-left-color: var(--primary-blue); font-weight: 700; }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-section-label { padding: 14px 24px 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-grey); text-transform: uppercase; letter-spacing: 0.8px; }
+        
+        .sidebar-badge { background: var(--gradient-blue); color: var(--white); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: auto; }
+
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 14px; color: var(--text-grey); font-family: var(--font-main); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: var(--transition); justify-content: center; }
+        .sidebar-logout:hover { background: var(--danger-bg); color: var(--danger-red); border-color: #FECACA; }
+
+        /* ══════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════ */
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 14px 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 1px 0 var(--border-grey), 0 4px 20px rgba(0,0,0,0.04); transition: transform 0.3s ease; }
+        header.hidden { transform: translateY(-100%); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+
+        .menu-toggle-btn { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; display: none; align-items: center; justify-content: center; transition: var(--transition); z-index: 1001; }
+        .menu-toggle-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 38px; height: 38px; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); display: flex; align-items: center; justify-content: center; color: var(--text-grey); cursor: pointer; font-size: 1rem; transition: var(--transition); position: relative; text-decoration: none; }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); display: none; }
+
+        .header-avatar-btn { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 30px; cursor: pointer; transition: var(--transition); }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--white); }
+        .header-avatar-name { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+
+        /* ══════════════════════════════════════
+           MAIN LAYOUT & SETTINGS UI
+        ══════════════════════════════════════ */
+        .dashboard-container { margin-top: 80px; padding: 32px 5%; max-width: 800px; margin-left: auto; margin-right: auto; width: 100%; transition: var(--transition); }
+
+        .page-title { font-family: var(--font-serif); font-size: 2.2rem; color: var(--text-dark); margin-bottom: 6px; animation: slideUp 0.4s ease-out; letter-spacing: -0.5px; }
+        .page-subtitle { color: var(--text-grey); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; animation: slideUp 0.5s ease-out; }
+
+        .settings-section {
+            background: var(--white); border-radius: var(--radius-card);
+            padding: 32px; margin-bottom: 24px;
+            box-shadow: var(--shadow-card); 
+            border: 1px solid var(--border-grey);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-grey); }
+        .section-icon { 
+            width: 44px; height: 44px; border-radius: 14px; background: #EFF6FF; color: var(--primary-blue);
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .section-title { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); }
+
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+        .form-input {
+            width: 100%; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--border-grey);
+            font-family: inherit; font-size: 0.95rem; background: var(--bg-light-grey); 
+            color: var(--text-dark); font-weight: 500; transition: var(--transition);
+        }
+        .form-input::placeholder { color: #9CA3AF; font-weight: 400; }
+        .form-input:focus { outline: none; border-color: var(--primary-blue); background: var(--white); box-shadow: 0 0 0 3px rgba(0, 0, 204, 0.1); }
+        .form-input:disabled { background: #E5E7EB; color: #6B7280; cursor: not-allowed; border-color: #D1D5DB; }
+
+        /* Toggles */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-grey); }
+        .toggle-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .toggle-text h4 { font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .toggle-text p { font-size: 0.85rem; color: var(--text-grey); font-weight: 500;}
+        
+        .switch { position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0;}
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--primary-blue); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Buttons */
+        .btn {
+            width: 100%; padding: 16px; border-radius: var(--radius-btn); font-family: inherit; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
+        }
+        .btn-primary { background: var(--gradient-blue); color: var(--white); border: none; box-shadow: 0 4px 12px rgba(0, 0, 204, 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 204, 0.3); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .btn-outline { background: var(--white); color: var(--text-dark); border: 2px solid var(--border-grey); }
+        .btn-outline:hover { background: #F8FAFC; border-color: #CBD5E1; }
+
+        .btn-danger { background: var(--danger-bg); color: var(--danger-red); border: 1px solid transparent; }
+        .btn-danger:hover { background: var(--danger-red); color: var(--white); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+
+        /* Links inside Cards */
+        .settings-link { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border-grey); text-decoration: none; color: var(--text-dark); transition: var(--transition); cursor: pointer; }
+        .settings-link:last-child { border-bottom: none; }
+        .settings-link:hover { padding-left: 8px; color: var(--primary-blue); }
+        .link-content { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 0.95rem; }
+        .link-content i { color: var(--primary-blue); font-size: 1.1rem; width: 20px; text-align: center; }
+        .chevron { color: #9CA3AF; font-size: 0.9rem; transition: var(--transition); }
+        .settings-link:hover .chevron { color: var(--primary-blue); transform: translateX(4px); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* MEDIA QUERIES */
+        @media (min-width: 1024px) {
+            .menu-toggle-btn { display: none !important; }
+            .sidebar { transform: translateX(0); box-shadow: none; }
+            header, .dashboard-container { margin-left: var(--sidebar-w); }
+            header { width: calc(100% - var(--sidebar-w)); left: var(--sidebar-w); }
+            .sidebar-header .close-sidebar { display: none; }
+            .sidebar-overlay { display: none !important; }
+            header .logo-container { display: none; }
+        }
+        @media (max-width: 1023px) {
+            .menu-toggle-btn { display: flex !important; }
+            .dashboard-container { padding: 24px 20px 40px; margin-top: 70px; }
+            .settings-section { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="seeker-dashboard.html" class="sidebar-logo">
+                <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="sidebar-brand">Swifthire</span>
+            </a>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+                <div class="sidebar-user-role">Job Seeker</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Main Menu</span>
+            <a href="seeker-dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="seeker-profile.html" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="seeker-browse-jobs.html" class="sidebar-link"><i class="fas fa-search"></i> Browse Jobs</a>
+            <a href="seeker-job-detail.html" class="sidebar-link"><i class="fas fa-file-alt"></i> Job Detail</a>
+            <a href="seeker-saved-jobs.html" class="sidebar-link"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="seeker-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> My Applications <span class="sidebar-badge" id="sidebarAppCount">0</span></a>
+            <a href="seeker-messages.html" class="sidebar-link"><i class="fas fa-envelope"></i> Messages <span class="sidebar-badge" id="sidebarMsgCount">0</span></a>
+
+            <span class="sidebar-section-label" style="margin-top:12px;">Account & Support</span>
+            <a href="seeker-settings.html" class="sidebar-link active"><i class="fas fa-cog"></i> Settings</a>
+            <a href="seeker-contact.html" class="sidebar-link"><i class="fas fa-address-book"></i> Contact</a>
+            <a href="seeker-help.html" class="sidebar-link"><i class="fas fa-question-circle"></i> Help</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-logout logout-action">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="header-left">
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="seeker-dashboard.html" class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">Swifthire</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="seeker-browse-jobs.html" class="header-icon-btn" title="Browse Jobs">
+                <i class="fas fa-search"></i>
+            </a>
+            <a href="seeker-messages.html" class="header-icon-btn" title="Messages">
+                <i class="fas fa-envelope"></i>
+                <span class="header-notif-dot" id="headerNotifDot"></span>
+            </a>
+            <div class="header-avatar-btn" onclick="window.location='seeker-profile.html'">
+                <div class="header-avatar" id="headerAvatarInit">U</div>
+                <span class="header-avatar-name" id="headerName">...</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Manage your account preferences and security.</p>
+
+        <!-- 1. ACCOUNT PROFILE -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-user-circle"></i></div>
+                <div class="section-title">Profile Information</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="emailInput" class="form-input" disabled value="">
+                <p style="font-size:0.8rem; color:#9CA3AF; margin-top:6px; font-weight:500;">Email is linked to authentication and cannot be changed here.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="fullNameInput" class="form-input" value="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="phoneInput" class="form-input" value="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bio / About</label>
+                <textarea id="bioInput" class="form-input" rows="3"></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="saveProfileBtn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+
+        <!-- 2. SETTINGS & NOTIFICATIONS -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-sliders-h"></i></div>
+                <div class="section-title">Preferences</div>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-text">
+                    <h4>Profile Visibility</h4>
+                    <p>Allow your profile to be found in talent searches.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="visibilityToggle" checked onchange="window.updatePreference('visibility', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-text">
+                    <h4>Job Alerts</h4>
+                    <p>Get notified about new jobs matching your profile.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="alertsToggle" checked onchange="window.updatePreference('jobAlerts', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-text">
+                    <h4>Application Updates</h4>
+                    <p>Status changes on your submitted applications.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="updatesToggle" checked onchange="window.updatePreference('appUpdates', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 3. SECURITY -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="section-title">Security</div>
+            </div>
+            
+            <p style="font-size:0.95rem; color:var(--text-grey); margin-bottom:16px; font-weight:500;">
+                Keep your account secure by regularly updating your password.
+            </p>
+            <button class="btn btn-outline" id="resetPasswordBtn">
+                <i class="fas fa-key"></i> Send Password Reset Email
+            </button>
+        </div>
+
+        <!-- 4. INFO & LEGAL -->
+        <div class="settings-section" style="padding: 10px 32px;">
+            <a href="seeker-terms.html" class="settings-link">
+                <div class="link-content"><i class="fas fa-file-contract"></i> Terms of Service</div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </a>
+            <a href="seeker-privacy.html" class="settings-link">
+                <div class="link-content"><i class="fas fa-user-secret"></i> Privacy Policy</div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </a>
+            <a href="seeker-help.html" class="settings-link">
+                <div class="link-content"><i class="fas fa-headset"></i> Contact Support</div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </a>
+            <div class="settings-link" style="cursor: default;">
+                <div class="link-content" style="color: var(--text-grey);"><i class="fas fa-code-branch" style="color: var(--text-grey);"></i> App Version</div>
+                <span style="font-size:0.85rem; color:#9CA3AF; font-weight:800;">v2.1.0</span>
+            </div>
+        </div>
+
+        <!-- 5. DANGER ZONE -->
+        <div class="settings-section" style="border: 2px solid var(--danger-bg);">
+            <div class="section-header" style="border-bottom-color: var(--danger-bg);">
+                <div class="section-icon" style="background:var(--danger-bg); color:var(--danger-red);"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="section-title" style="color:var(--danger-red);">Danger Zone</div>
+            </div>
+            <p style="font-size:0.95rem; color:var(--text-grey); margin-bottom:20px; font-weight:500;">
+                Deleting your account is permanent. All your data, applications, and saved jobs will be wiped immediately.
+            </p>
+            <button class="btn btn-danger" onclick="window.deleteAccount()">
+                <i class="fas fa-trash"></i> Delete Account
+            </button>
+        </div>
+
+        <button class="btn btn-outline logout-action" style="margin-bottom: 40px; border-color:var(--border-grey); color:var(--text-grey);">
+            <i class="fas fa-sign-out-alt"></i> Log Out
+        </button>
+
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        /* TOAST UTILITY */
+        window.showToast = function(message, type, duration) {
+            type = type || 'info'; duration = duration || 3500;
+            var icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span><button class="toast-close" onclick="window.removeToast(this.parentElement)"><i class="fas fa-times"></i></button>';
+            container.appendChild(toast);
+            setTimeout(function() { window.removeToast(toast); }, duration);
+        };
+        window.removeToast = function(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.add('removing');
+            setTimeout(function() { if (toast.parentElement) toast.parentElement.removeChild(toast); }, 350);
+        };
+
+        /* SIDEBAR TOGGLE */
+        var menuBtn = document.getElementById('menuToggleBtn'), sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay'), closeBtn = document.getElementById('closeSidebar');
+        function openSidebar()  { sidebar.classList.add('open');  overlay.classList.add('show'); }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+        if (menuBtn)  menuBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+        /* HEADER SCROLL */
+        var lastY = window.scrollY, header = document.getElementById('header');
+        window.addEventListener('scroll', function() {
+            var currY = window.scrollY;
+            if (Math.abs(currY - lastY) < 8) return;
+            header.classList.toggle('hidden', currY > lastY && currY > 70);
+            lastY = currY;
+        }, { passive: true });
+    </script>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, onSnapshot, updateDoc, deleteDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+            authDomain: "skilllink69-122aa.firebaseapp.com",
+            projectId: "skilllink69-122aa",
+            storageBucket: "skilllink69-122aa.firebasestorage.app",
+            messagingSenderId: "673456146518",
+            appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+            measurementId: "G-H69LL8HKYQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firebaseAuth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userUnsub = null;
+
+        function showIndexError(error) {
+            if(error.message && error.message.includes("requires an index")) {
+                const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+                if(linkMatch) {
+                    document.body.innerHTML += `
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                        <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                        <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                    </div>`;
+                }
+            }
+        }
+
+        function setupRealtimeListeners(uid) {
+            // Listen for Applications Count to update Sidebar
+            const appsQuery = query(collection(db, "applications"), where("userId", "==", uid));
+            onSnapshot(appsQuery, (snap) => {
+                const badge = document.getElementById('sidebarAppCount');
+                if (badge) badge.textContent = snap.size;
+            }, (error) => {
+                console.error("Applications Error:", error);
+                showIndexError(error);
+            });
+
+            // Listen for Messages Count to update Sidebar
+            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
+            onSnapshot(chatsQuery, (snap) => {
+                let unread = 0;
+                snap.forEach(d => {
+                    if(d.data().unreadCount_seeker > 0) unread++;
+                });
+                const badge = document.getElementById('sidebarMsgCount');
+                const notifDot = document.getElementById('headerNotifDot');
+                if(badge) badge.textContent = unread;
+                if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+            }, (error) => {
+                console.error("Chats Error:", error);
+                showIndexError(error);
+            });
+        }
+
+        // Listen for Auth State
+        onAuthStateChanged(firebaseAuth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('emailInput').value = user.email || '';
+                
+                setupRealtimeListeners(user.uid);
+
+                userUnsub = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const fullName = data.fullName || data.name || 'Job Seeker';
+                        const nameParts = fullName.trim().split(" ");
+                        
+                        let initial = 'U';
+                        if (nameParts.length > 1) {
+                            initial = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+                        } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                            initial = nameParts[0].charAt(0).toUpperCase();
+                        }
+
+                        // Populate Header & Sidebar Avatars
+                        document.getElementById('sidebarAvatarInit').textContent = initial;
+                        document.getElementById('sidebarName').textContent = fullName;
+                        document.getElementById('headerAvatarInit').textContent = initial;
+                        document.getElementById('headerName').textContent = nameParts[0] || 'User';
+
+                        // Only update inputs if they are not currently focused
+                        if (document.activeElement.id !== 'fullNameInput') {
+                            document.getElementById('fullNameInput').value = fullName !== 'Job Seeker' ? fullName : '';
+                        }
+                        if (document.activeElement.id !== 'phoneInput') {
+                            document.getElementById('phoneInput').value = data.phone || '';
+                        }
+                        if (document.activeElement.id !== 'bioInput') {
+                            document.getElementById('bioInput').value = data.bio || '';
+                        }
+                        
+                        // Update Preferences Toggles
+                        if(data.preferences) {
+                            document.getElementById('visibilityToggle').checked = data.preferences.visibility !== false;
+                            document.getElementById('alertsToggle').checked = data.preferences.jobAlerts !== false;
+                            document.getElementById('updatesToggle').checked = data.preferences.appUpdates !== false;
+                        }
+                    }
+                }, (error) => {
+                    console.error("Error listening to user data:", error);
+                    showIndexError(error);
+                });
+
+            } else {
+                // Not logged in
+                window.location.href = "index.html";
+            }
+        });
+
+        // Save Profile Action
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const btn = document.getElementById('saveProfileBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const userDocRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userDocRef, {
+                    fullName: document.getElementById('fullNameInput').value.trim(),
+                    phone: document.getElementById('phoneInput').value.trim(),
+                    bio: document.getElementById('bioInput').value.trim()
+                });
+                
+                window.showToast('Profile information saved successfully.', 'success');
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                window.showToast('Error saving profile changes.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        });
+
+        // Preference Update Action
+        window.updatePreference = async function(key, value) {
+            if(!currentUser) return;
+            try {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    [`preferences.${key}`]: value
+                });
+               window.showToast('Preference updated.', 'success');
+            } catch(e) {
+                console.error("Error updating preference:", e);
+                window.showToast('Error updating preference.', 'error');
+            }
+        };
+
+        // Reset Password Action
+        document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            try {
+                await sendPasswordResetEmail(firebaseAuth, currentUser.email);
+                window.showToast('Password reset link sent to your email.', 'success');
+            } catch (error) {
+                console.error("Error sending password reset:", error);
+                window.showToast('Error sending reset email.', 'error');
+            }
+        });
+
+        // Delete Account Action
+        window.deleteAccount = async function() {
+            if(!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+            if(!currentUser) return;
+            
+            try {
+                // Delete user doc from Firestore
+                await deleteDoc(doc(db, "users", currentUser.uid));
+                // Delete auth user
+                await deleteUser(currentUser);
+                
+                window.showToast('Account deleted successfully.', 'info');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } catch(e) {
+                console.error("Error deleting account:", e);
+                window.showToast('Error deleting account. You may need to re-login first.', 'error');
+            }
+        };
+
+        // Logout Action
+        const logoutBtns = document.querySelectorAll('.logout-action');
+        logoutBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
+                if(userUnsub) userUnsub();
+                signOut(firebaseAuth).then(() => {
+                    window.location.href = "index.html";
+                }).catch(err => {
+                    console.error("Logout error:", err);
+                    window.showToast('Error signing out.', 'error');
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
+                });
+            });
+        });
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

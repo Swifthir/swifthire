@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">System Logs | Swifthire Admin</title>
+  
+  <meta name="description" content="System Audit Logs - Swifthire Admin">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <!-- jsPDF for Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* ── EXACT SWIFTHIRE VARIABLES ── */
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --dark-green: #047857; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --shadow-hover: 0 20px 40px rgba(0,0,0,0.08);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-x: hidden; 
+        padding-bottom: 40px; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: transform 0.3s ease, width 0.3s, left 0.3s; 
+    }
+    header.hidden { transform: translateY(-100%); }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; }
+    
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+    .header-user-info { display:flex; flex-direction:column; text-align:right; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px; background: var(--gradient-blue); 
+        color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { 
+        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; 
+        color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; 
+    }
+    .sidebar-link { 
+        display: flex; align-items: center; gap: 14px; padding: 13px 20px; 
+        color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; 
+        transition: var(--transition); border-right: 4px solid transparent; 
+        margin: 0 8px; border-radius: 12px; 
+    }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+    .sidebar-badge { 
+        margin-left: auto; background: var(--danger-red); color: white; 
+        font-size: 0.65rem; font-weight: 800; padding: 2px 7px; 
+        border-radius: 20px; min-width: 20px; text-align: center; 
+    }
+
+    /* ── LAYOUT ── */
+    .dashboard-container { 
+        margin-top: 80px; padding: 20px; width: 100%; 
+        max-width: 1400px; transition: var(--transition); margin-left: 0; 
+    }
+
+    /* ── HERO BANNER ── */
+    .hero-banner { 
+        background: var(--gradient-blue); border-radius: 24px; 
+        padding: 28px 30px; margin-bottom: 28px; 
+        position: relative; overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,204,0.25); 
+    }
+    .hero-banner::before { 
+        content: ''; position: absolute; top: -40px; right: -40px; 
+        width: 200px; height: 200px; background: rgba(255,255,255,0.06); border-radius: 50%; 
+    }
+    .hero-banner::after { 
+        content: ''; position: absolute; bottom: -60px; right: 100px; 
+        width: 150px; height: 150px; background: rgba(255,255,255,0.04); border-radius: 50%; 
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-live-badge { 
+        display: inline-flex; align-items: center; gap: 6px; 
+        background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.95); 
+        font-size: 0.75rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; 
+        margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); 
+    }
+    .hero-live-dot { 
+        width: 7px; height: 7px; background: #4ADE80; 
+        border-radius: 50%; animation: pulse-dot 2s infinite; 
+    }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+    .hero-title { 
+        font-family: var(--font-serif); font-size: 1.8rem; 
+        color: white; margin-bottom: 6px; line-height: 1.2; 
+    }
+    .hero-subtitle { color: rgba(255,255,255,0.8); font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 16px; }
+    .hero-meta-item { display: flex; align-items: center; gap: 8px; }
+    .hero-meta-item i { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .hero-meta-item span { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 600; }
+    .hero-meta-value { color: white; font-weight: 800; }
+
+    /* ── STATS ── */
+    .stats-grid-4 { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
+    .stat-card { 
+        background: var(--white); border-radius: 20px; padding: 20px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        transition: var(--transition); display: flex; flex-direction: column; 
+        align-items: flex-start; position: relative; overflow: hidden; 
+    }
+    .stat-card::after { 
+        content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; 
+        background: var(--gradient-blue); transform: scaleX(0); 
+        transform-origin: left; transition: var(--transition); 
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: #BFDBFE; }
+    .stat-card:hover::after { transform: scaleX(1); }
+    .stat-icon { 
+        width: 50px; height: 50px; border-radius: 14px; 
+        display: flex; align-items: center; justify-content: center; 
+        margin-bottom: 16px; font-size: 1.3rem; transition: var(--transition); 
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+    .stat-icon-primary   { background: #EFF6FF; color: var(--primary-blue); }
+    .stat-icon-purple    { background: #F3E8FF; color: #9333EA; }
+    .stat-icon-success   { background: #ECFDF5; color: #10B981; }
+    .stat-icon-danger    { background: #FEF2F2; color: #EF4444; }
+    .stat-value  { font-size: 2rem; font-weight: 800; color: var(--text-dark); line-height: 1.1; margin-bottom: 4px; }
+    .stat-label  { font-size: 0.8rem; color: var(--text-grey); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-change { 
+        display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; 
+        font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; 
+    }
+    .stat-change-positive { background: #ECFDF5; color: #047857; }
+    .stat-change-negative { background: var(--danger-bg); color: var(--danger-red); }
+    .stat-change-neutral  { background: var(--bg-light-grey); color: var(--text-grey); }
+
+    /* ── BUTTONS ── */
+    .btn-primary { 
+        background: var(--gradient-blue); color: var(--white); border: none; 
+        padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; 
+        cursor: pointer; transition: var(--transition); font-family: var(--font-main); 
+        display: inline-flex; align-items: center; gap: 8px; text-decoration: none; 
+        box-shadow: 0 4px 15px rgba(0,0,204,0.2); 
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,204,0.3); }
+    .btn-outline { 
+        background: transparent; border: 2px solid var(--border-grey); 
+        padding: 8px 18px; border-radius: 30px; font-weight: 700; color: var(--text-dark); 
+        cursor: pointer; transition: var(--transition); font-family: var(--font-main); 
+        font-size: 0.85rem; text-decoration: none; 
+        display: inline-flex; align-items: center; gap: 8px; 
+    }
+    .btn-outline:hover { background: var(--bg-light-grey); border-color: var(--primary-blue); color: var(--primary-blue); }
+
+    /* ── CARD ── */
+    .admin-card { 
+        background: var(--white); border-radius: 20px; padding: 24px; 
+        box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); 
+        transition: var(--transition); text-align: left; margin-bottom: 24px; 
+    }
+    .admin-card:hover { border-color: #BFDBFE; box-shadow: var(--shadow-hover); }
+
+    /* ── SEARCH & FILTER ── */
+    .search-filter-bar { 
+        display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; 
+        align-items: center; justify-content: space-between;
+    }
+    .search-filter-group { display: flex; gap: 12px; flex-wrap: wrap; flex: 1; }
+    .action-group { display: flex; gap: 12px; }
+    
+    .search-input-wrap { flex: 1; min-width: 220px; position: relative; }
+    .search-input-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-grey); font-size: 0.9rem; pointer-events: none; }
+    .filter-input { 
+        width: 100%; padding: 11px 20px 11px 42px; 
+        border: 2px solid var(--border-grey); border-radius: 30px; 
+        font-size: 0.9rem; font-family: var(--font-main); outline: none; 
+        transition: var(--transition); background: var(--white); font-weight: 500; 
+    }
+    .filter-input:focus { border-color: var(--bright-blue); box-shadow: 0 0 0 4px #EFF6FF; }
+    .filter-select { 
+        padding: 11px 42px 11px 18px; border: 2px solid var(--border-grey); 
+        border-radius: 30px; font-size: 0.88rem; font-weight: 600; color: var(--text-dark); 
+        background: var(--white); cursor: pointer; transition: var(--transition); 
+        min-width: 150px; outline: none; font-family: var(--font-main); appearance: none; 
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%236B7280" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); 
+        background-repeat: no-repeat; background-position: right 14px center; 
+    }
+    .filter-select:focus, .filter-select:hover { border-color: var(--bright-blue); background-color: #EFF6FF; }
+
+    /* ── TABLE ── */
+    .table-responsive { 
+        width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; 
+        border: 1px solid var(--border-grey); border-radius: 16px; background: var(--white); 
+    }
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 800px; text-align: left; }
+    .admin-table th { 
+        padding: 14px 18px; font-size: 0.75rem; font-weight: 700; 
+        text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-grey); 
+        border-bottom: 1px solid var(--border-grey); background: var(--bg-light-grey); white-space: nowrap; 
+    }
+    .admin-table th:first-child { border-radius: 16px 0 0 0; }
+    .admin-table th:last-child  { border-radius: 0 16px 0 0; }
+    .admin-table td { 
+        padding: 16px 18px; font-size: 0.88rem; color: var(--text-dark); 
+        border-bottom: 1px solid var(--bg-light-grey); vertical-align: middle; 
+        font-weight: 500; 
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr { transition: var(--transition); }
+    .admin-table tbody tr:hover td { background: #F8FAFC; }
+
+    /* Cells */
+    .log-time { font-size: 0.8rem; color: var(--text-grey); font-weight: 600; white-space: nowrap; }
+    .log-user { font-weight: 800; color: var(--text-dark); }
+    .log-action { font-weight: 700; color: var(--text-dark); margin-bottom: 3px; display: block; }
+    .log-desc { font-size: 0.82rem; color: var(--text-grey); display: block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .log-ip { font-family: monospace; font-size: 0.85rem; color: var(--text-grey); background: var(--bg-light-grey); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-grey); white-space: nowrap; }
+
+    /* Badges */
+    .badge { 
+        padding: 5px 11px; border-radius: 30px; font-size: 0.72rem; font-weight: 800; 
+        text-transform: uppercase; letter-spacing: 0.05em; 
+        display: inline-flex; align-items: center; gap: 4px; 
+    }
+    .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:0.7; }
+    .badge-info    { background: #EFF6FF; color: var(--primary-blue); border: 1px solid #BFDBFE; }
+    .badge-success { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .badge-warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    .badge-danger  { background: var(--danger-bg); color: var(--danger-red); border: 1px solid #FECACA; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { 
+        width: 70px; height: 70px; background: #EFF6FF; border-radius: 20px; 
+        display: flex; align-items: center; justify-content: center; 
+        margin: 0 auto 16px; font-size: 1.8rem; color: var(--primary-blue); 
+    }
+    .empty-title { font-family: var(--font-serif); font-size: 1.2rem; color: var(--text-dark); margin-bottom: 6px; }
+    .empty-text  { font-size: 0.9rem; color: var(--text-grey); max-width: 300px; margin: 0 auto 20px; }
+
+    /* ── PAGINATION ── */
+    .pagination-wrap { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 12px; }
+    .pagination-info { font-size: 0.85rem; color: var(--text-grey); font-weight: 600; }
+    .pagination { display: flex; gap: 6px; }
+    .pagination-btn { 
+        width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; 
+        border: 2px solid var(--border-grey); border-radius: 10px; font-size: 0.88rem; 
+        font-weight: 700; color: var(--text-dark); background: var(--white); 
+        transition: var(--transition); cursor: pointer; font-family: var(--font-main); 
+    }
+    .pagination-btn:hover:not(:disabled) { border-color: var(--bright-blue); color: var(--bright-blue); background: #EFF6FF; }
+    .pagination-btn.active { background: var(--gradient-blue); border-color: transparent; color: var(--white); box-shadow: 0 4px 10px rgba(0,0,204,0.2); }
+    .pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 24px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { 
+        background: var(--white); border-radius: 14px; padding: 14px 18px; 
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12); border-left: 4px solid var(--primary-blue); 
+        display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: 340px; 
+        animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1); 
+    }
+    .toast.success { border-left-color: var(--success-green); }
+    .toast.warning { border-left-color: #F59E0B; }
+    .toast.danger  { border-left-color: var(--danger-red); }
+    @keyframes toastIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .toast-msg  { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); flex: 1; }
+    .toast-close { background: none; border: none; color: var(--text-grey); cursor: pointer; font-size: 1rem; }
+
+    /* ── RESPONSIVE ── */
+    @media (min-width: 600px) {
+        .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .dashboard-container { margin-left: 280px; width: calc(100% - 280px); padding: 30px 40px; }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+        .stats-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .admin-card { padding: 28px; }
+        .hero-title { font-size: 2.2rem; }
+    }
+    @media (max-width: 768px) {
+        .search-filter-bar { flex-direction: column; align-items: stretch; }
+        .action-group { width: 100%; justify-content: stretch; }
+        .action-group .btn-outline, .action-group .btn-primary { flex: 1; justify-content: center; }
+        .filter-select, .search-input-wrap { width: 100%; }
+        .pagination-wrap { justify-content: center; }
+        .pagination-info { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="admin-dashboard.html" style="text-decoration: none;">
+          <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      </a>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="navAvatarInit">A</div>
+      <div>
+        <div class="sidebar-profile-name" id="navName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link"><i class="fas fa-briefcase"></i> Job Management</a>
+      <a href="admin-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> Applications</a>
+      <a href="admin-user-directory.html" class="sidebar-link"><i class="fas fa-users"></i> User Directory</a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link active"><i class="fas fa-list-alt"></i> Logs</a>
+      <a href="admin-reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> Reports</a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link"><i class="fas fa-headset"></i> Support</a>
+      <a href="admin-system-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-right" style="gap:12px;">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-container">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-content">
+        <div class="hero-live-badge">
+          <div class="hero-live-dot"></div>
+          Live Security Monitor
+        </div>
+        <h1 class="hero-title">System Audit Logs</h1>
+        <p class="hero-subtitle">Track system security events, user actions, and error diagnostics.</p>
+        
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <i class="fas fa-shield-alt"></i>
+            <span><span class="hero-meta-value" id="heroTotalLogs">0</span> Events Monitored</span>
+          </div>
+          <div class="hero-meta-item" style="color: #FCA5A5;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span><span class="hero-meta-value" id="heroErrorLogs" style="color:#FCA5A5;">0</span> Critical Errors</span>
+          </div>
+          <div class="hero-meta-item">
+            <i class="fas fa-clock"></i>
+            <span>Updated <span class="hero-meta-value" id="heroLastUpdated">—</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid-4">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-primary"><i class="fas fa-server"></i></div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-success"><i class="fas fa-info-circle"></i></div>
+        <div class="stat-value" id="statInfo">—</div>
+        <div class="stat-label">Info / Success</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-warning"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="stat-value" id="statWarn">—</div>
+        <div class="stat-label">Warnings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-danger"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-value" id="statError">—</div>
+        <div class="stat-label">Critical Errors</div>
+      </div>
+    </div>
+
+    <!-- Logs Table Card -->
+    <div class="admin-card">
+      
+      <!-- Search & Filters Bar -->
+      <div class="search-filter-bar">
+        <div class="search-filter-group">
+          <div class="search-input-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" class="filter-input" placeholder="Search user, action, IP..." id="searchLogs" oninput="window.applyFilters()">
+          </div>
+          <select class="filter-select" id="filterLevel" onchange="window.applyFilters()">
+            <option value="all">All Levels</option>
+            <option value="INFO">Info</option>
+            <option value="SUCCESS">Success</option>
+            <option value="WARNING">Warning</option>
+            <option value="ERROR">Error</option>
+          </select>
+        </div>
+        <div class="action-group">
+          <button class="btn-outline" onclick="window.refreshLogs()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn-primary" onclick="window.exportPDF()">
+            <i class="fas fa-file-pdf"></i> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Timestamp</th>
+              <th>User / System</th>
+              <th>Event Details</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon"><i class="fas fa-history"></i></div>
+        <div class="empty-title">No Logs Found</div>
+        <div class="empty-text">No audit logs match your current search or filter criteria.</div>
+        <button class="btn-outline" onclick="window.resetFilters()">Clear Filters</button>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-wrap">
+        <span class="pagination-info" id="paginationInfo">Showing 0 events</span>
+        <div class="pagination">
+          <button class="pagination-btn" id="prevBtn" disabled onclick="window.changePage(-1)">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div id="pageButtons"></div>
+          <button class="pagination-btn" id="nextBtn" onclick="window.changePage(1)">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 1. UI LOGIC SCRIPT -->
+  <script>
+    // State
+    window.allLogs = [];
+    window.filteredLogs = [];
+    window.currentPage = 1;
+    window.PAGE_SIZE = 10;
+
+    // Mock Data (Fallback if Firestore is empty)
+    window.fallbackLogs = [
+      { id: 'L001', level: 'ERROR',   timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),     userName: 'System',          action: 'Database Timeout',  details: 'Connection to secondary DB failed after 3000ms', ip: '192.168.1.10' },
+      { id: 'L002', level: 'INFO',    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),    userName: 'Jane Doe',        action: 'User Login',        details: 'Successful authentication via email', ip: '41.220.12.44' },
+      { id: 'L003', level: 'WARNING', timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),    userName: 'Unknown',         action: 'Failed Login',      details: 'Invalid password attempt (3/5)', ip: '105.163.4.192' },
+      { id: 'L004', level: 'SUCCESS', timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),    userName: 'System Admin',    action: 'System Maintenance',details: 'Cleared temporary cache files', ip: '41.90.11.23' },
+      { id: 'L005', level: 'INFO',    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),   userName: 'Admin User',      action: 'Settings Update',   details: 'Updated global payment gateway keys', ip: '192.168.1.5' },
+      { id: 'L006', level: 'ERROR',   timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),   userName: 'System',          action: 'API Failure',       details: 'M-Pesa API timeout during callback', ip: '192.168.1.12' },
+      { id: 'L007', level: 'SUCCESS', timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),   userName: 'John Smith',      action: 'Profile Update',    details: 'Uploaded new resume PDF', ip: '41.80.33.11' }
+    ];
+
+    // Sidebar & Header Logic
+    document.addEventListener('DOMContentLoaded', function () {
+      const menuToggleBtn   = document.getElementById('menuToggleBtn');
+      const sidebar         = document.getElementById('sidebar');
+      const sidebarOverlay  = document.getElementById('sidebarOverlay');
+      const closeSidebarBtn = document.getElementById('closeSidebar');
+
+      function toggleSidebar() {
+        if (sidebar) sidebar.classList.toggle('open');
+        if (sidebarOverlay) sidebarOverlay.classList.toggle('show');
+      }
+      if (menuToggleBtn)   menuToggleBtn.onclick = toggleSidebar;
+      if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+      if (sidebarOverlay)  sidebarOverlay.onclick = toggleSidebar;
+
+      let lastY = window.scrollY;
+      const header = document.getElementById('header');
+      window.addEventListener('scroll', function () {
+        const currY = window.scrollY;
+        if (Math.abs(currY - lastY) < 10) return;
+        if (currY > lastY && currY > 60) header.classList.add('hidden');
+        else header.classList.remove('hidden');
+        lastY = currY;
+      }, { passive: true });
+    });
+
+    // Toast Function
+    window.showToast = function(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const icons = { success: 'fa-check-circle', warning: 'fa-exclamation-triangle', danger: 'fa-times-circle', info: 'fa-info-circle' };
+      const colors = { success: '#10B981', warning: '#F59E0B', danger: '#EF4444', info: 'var(--primary-blue)' };
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas ${icons[type] || icons.info} toast-icon" style="color:${colors[type] || colors.info};"></i>
+        <span class="toast-msg">${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+    };
+
+    window.updateStatsAndUI = function() {
+      const total = window.allLogs.length;
+      const info  = window.allLogs.filter(l => l.level === 'INFO' || l.level === 'SUCCESS').length;
+      const warn  = window.allLogs.filter(l => l.level === 'WARNING').length;
+      const err   = window.allLogs.filter(l => l.level === 'ERROR').length;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statInfo').textContent  = info;
+      document.getElementById('statWarn').textContent  = warn;
+      document.getElementById('statError').textContent = err;
+      
+      document.getElementById('heroTotalLogs').textContent   = total;
+      document.getElementById('heroErrorLogs').textContent   = err;
+      document.getElementById('heroLastUpdated').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      window.applyFilters();
+    };
+
+    window.applyFilters = function() {
+      const search = (document.getElementById('searchLogs').value || '').toLowerCase();
+      const level  = document.getElementById('filterLevel').value;
+
+      window.filteredLogs = window.allLogs.filter(log => {
+        const matchSearch = !search || 
+          (log.userName || '').toLowerCase().includes(search) || 
+          (log.action || '').toLowerCase().includes(search) ||
+          (log.ip || '').toLowerCase().includes(search);
+        const matchLevel  = level === 'all' || log.level === level;
+        return matchSearch && matchLevel;
+      });
+
+      window.filteredLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      window.currentPage = 1;
+      window.renderTable();
+    };
+
+    window.resetFilters = function() {
+      document.getElementById('searchLogs').value = '';
+      document.getElementById('filterLevel').value = 'all';
+      window.applyFilters();
+    };
+
+    window.renderTable = function() {
+      const tbody      = document.getElementById('logsTableBody');
+      const emptyState = document.getElementById('emptyState');
+      const start      = (window.currentPage - 1) * window.PAGE_SIZE;
+      const pageLogs   = window.filteredLogs.slice(start, start + window.PAGE_SIZE);
+
+      const levelMap = {
+        'INFO':    { cls: 'badge-info',    label: 'INFO' },
+        'SUCCESS': { cls: 'badge-success', label: 'SUCCESS' },
+        'WARNING': { cls: 'badge-warning', label: 'WARNING' },
+        'ERROR':   { cls: 'badge-danger',  label: 'ERROR' }
+      };
+
+      if (pageLogs.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        document.getElementById('paginationInfo').textContent = '0 results';
+        document.getElementById('pageButtons').innerHTML = '';
+        document.getElementById('prevBtn').disabled = true;
+        document.getElementById('nextBtn').disabled = true;
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      tbody.innerHTML = pageLogs.map(log => {
+        const d = new Date(log.timestamp);
+        const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const badge = levelMap[log.level] || { cls: 'badge-info', label: log.level };
+
+        return `
+          <tr>
+            <td><span class="badge ${badge.cls}">${badge.label}</span></td>
+            <td>
+              <span class="log-time">${dateStr}</span><br>
+              <span style="font-size:0.75rem;color:var(--text-grey);">${timeStr}</span>
+            </td>
+            <td><span class="log-user">${log.userName || 'System'}</span></td>
+            <td>
+              <span class="log-action">${log.action}</span>
+              <span class="log-desc" title="${log.details || ''}">${log.details || '—'}</span>
+            </td>
+            <td><span class="log-ip">${log.ip || '-'}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalFiltered = window.filteredLogs.length;
+      const showStart = start + 1;
+      const showEnd   = Math.min(start + window.PAGE_SIZE, totalFiltered);
+      document.getElementById('paginationInfo').textContent = `Showing ${showStart}–${showEnd} of ${totalFiltered} events`;
+
+      window.renderPagination();
+    };
+
+    window.renderPagination = function() {
+      const totalPages = Math.ceil(window.filteredLogs.length / window.PAGE_SIZE);
+      const container  = document.getElementById('pageButtons');
+      container.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (totalPages > 5 && i > 2 && i < totalPages - 1 && i !== window.currentPage) {
+          if (i === 3 || i === totalPages - 2) {
+            const span = document.createElement('span');
+            span.textContent = '...';
+            span.style.padding = '0 8px';
+            span.style.color = 'var(--text-grey)';
+            container.appendChild(span);
+          }
+          continue;
+        }
+
+        const btn = document.createElement('button');
+        btn.className = 'pagination-btn' + (i === window.currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => { window.currentPage = i; window.renderTable(); };
+        container.appendChild(btn);
+      }
+
+      document.getElementById('prevBtn').disabled = window.currentPage === 1;
+      document.getElementById('nextBtn').disabled = window.currentPage === totalPages || totalPages === 0;
+    };
+
+    window.changePage = function(dir) {
+      const totalPages = Math.ceil(window.filteredLogs.length / window.PAGE_SIZE);
+      window.currentPage = Math.max(1, Math.min(window.currentPage + dir, totalPages));
+      window.renderTable();
+    };
+
+    window.exportPDF = function() {
+      if (typeof window.jspdf === 'undefined') {
+        window.showToast('PDF export library not loaded.', 'danger');
+        return;
+      }
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 204);
+        doc.text("System Audit Logs - Swifthire", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Exported on: ${new Date().toLocaleString()}`, 14, 28);
+        doc.text(`Total Records: ${window.filteredLogs.length}`, 14, 34);
+
+        const rows = window.filteredLogs.map(l => {
+          const d = new Date(l.timestamp);
+          const time = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-US');
+          return [l.level, time, l.userName || 'System', l.action, l.ip || '-'];
+        });
+
+        doc.autoTable({ 
+          head: [['Level', 'Timestamp', 'User', 'Action', 'IP']], 
+          body: rows, 
+          startY: 40,
+          theme: 'grid',
+          headStyles: { fillColor: [0, 0, 204], textColor: [255, 255, 255] },
+          styles: { fontSize: 8, cellPadding: 4 }
+        });
+
+        doc.save('swifthire-audit-logs.pdf');
+        window.showToast('PDF exported successfully!', 'success');
+      } catch (err) {
+        console.error(err);
+        window.showToast('Failed to export PDF', 'danger');
+      }
+    };
+  </script>
+
+  <!-- 2. FIREBASE & DATA SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+        authDomain: "skilllink69-122aa.firebaseapp.com",
+        projectId: "skilllink69-122aa",
+        storageBucket: "skilllink69-122aa.firebasestorage.app",
+        messagingSenderId: "673456146518",
+        appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+        measurementId: "G-H69LL8HKYQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let logsUnsub = null;
+
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `System Logs | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, (error) => {
+                console.error(error);
+                showIndexError(error);
+            });
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    // 1. Authenticate Admin
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                    const userData = uDoc.data();
+                    const name = (userData.firstName || 'Admin') + ' ' + (userData.lastName || '');
+                    
+                    document.getElementById('navAvatarInit').textContent = (userData.firstName || 'A')[0].toUpperCase();
+                    document.getElementById('navName').textContent = name;
+                    document.getElementById('headerName').textContent = name;
+                    
+                    loadAppConfig();
+                    setupRealtimeListeners();
+                } else {
+                    window.location.href = "index.html";
+                }
+            } catch(e) { window.location.href = "index.html"; }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = "index.html");
+    });
+
+    // 2. Fetch Logs Realtime
+    function setupRealtimeListeners() {
+        const logsRef = collection(db, "logs");
+        const q = query(logsRef, orderBy("timestamp", "desc"), limit(100));
+        
+        if (logsUnsub) logsUnsub();
+        
+        logsUnsub = onSnapshot(q, (snap) => {
+            if (snap.empty) {
+                window.allLogs = [...window.fallbackLogs];
+                console.log("Using mock logs as Firestore 'logs' collection is empty.");
+            } else {
+                window.allLogs = snap.docs.map(d => {
+                  const data = d.data();
+                  const ts = data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp;
+                  return { id: d.id, ...data, timestamp: ts };
+                });
+            }
+            window.updateStatsAndUI();
+        }, (error) => {
+            console.error("Error fetching logs:", error);
+            showIndexError(error);
+            window.allLogs = [...window.fallbackLogs];
+            window.updateStatsAndUI();
+            window.showToast("Firestore error. Showing mock data.", "warning");
+        });
+    }
+    
+    window.refreshLogs = function() {
+        setupRealtimeListeners();
+        window.showToast('System logs refreshed', 'success');
+    };
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

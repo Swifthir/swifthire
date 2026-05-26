@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Help Center | Swifthire</title>
+
+    <!-- PWA Links -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════
+           DESIGN TOKENS
+        ══════════════════════════════════════ */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg, #0000CC, #3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --warning-amber:  #F59E0B;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --purple-accent:  #8B5CF6;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+            
+            --chat-user-bg:   #0000CC;
+            --chat-bot-bg:    #F8FAFC;
+
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            
+            --shadow-sm:      0 2px 8px  rgba(0,0,0,0.06);
+            --shadow-card:    0 10px 30px rgba(0,0,0,0.07);
+            --shadow-hover:   0 20px 50px rgba(0,0,204,0.14);
+            --transition:     all 0.3s cubic-bezier(0.4,0,0.2,1);
+            --radius-card:    22px;
+            --radius-btn:     30px;
+            --sidebar-w:      280px;
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-grey);
+            background: #F8FAFC;
+            background-image:
+                radial-gradient(at 0%   0%,   hsla(210,100%,95%,0.9) 0, transparent 50%),
+                radial-gradient(at 100% 100%,  hsla(160,100%,95%,0.7) 0, transparent 50%),
+                radial-gradient(at 50%  50%,   hsla(220,100%,97%,0.5) 0, transparent 60%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        /* ══════════════════════════════════════
+           TOAST SYSTEM
+        ══════════════════════════════════════ */
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 14px; font-family: var(--font-main); font-size: 0.9rem; font-weight: 600; color: var(--white); min-width: 280px; max-width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); pointer-events: all; animation: toastIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .toast.removing { animation: toastOut 0.35s ease forwards; }
+        .toast.success  { background: linear-gradient(135deg,#10B981,#059669); }
+        .toast.error    { background: linear-gradient(135deg,#EF4444,#DC2626); }
+        .toast.info     { background: linear-gradient(135deg,#3b5bfb,#0000CC); }
+        @keyframes toastIn  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes toastOut { from{opacity:1;transform:translateX(0)}    to{opacity:0;transform:translateX(40px)} }
+        .toast-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.75); cursor: pointer; font-size: 0.9rem; padding: 2px 4px; transition: var(--transition); }
+        .toast-close:hover { color: var(--white); }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--white); box-shadow: 4px 0 24px rgba(0,0,0,0.06); z-index: 2000; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey); }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { padding: 28px 24px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); background: linear-gradient(135deg, #EFF6FF, #F8FAFC); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 38px; height: 38px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 34px; height: 34px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 0.9rem; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .sidebar-user { padding: 20px 24px; border-bottom: 1px solid var(--border-grey); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,204,0.25); }
+        .sidebar-user-info { flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-weight: 800; color: var(--text-dark); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+        .sidebar-user-badge { background: linear-gradient(135deg,#FEF3C7,#FDE68A); border: 1px solid #FCD34D; color: #92400E; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+
+        .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 2px; flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-left: 3px solid transparent; position: relative; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); border-left-color: rgba(0,0,204,0.3); }
+        .sidebar-link.active { color: var(--primary-blue); background: linear-gradient(90deg, #EFF6FF, #F8FAFC); border-left-color: var(--primary-blue); font-weight: 700; }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-badge { margin-left: auto; background: var(--gradient-blue); color: var(--white); font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+        .sidebar-section-label { padding: 14px 24px 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-grey); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 14px; color: var(--text-grey); font-family: var(--font-main); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
+        .sidebar-logout:hover { background: var(--danger-bg); color: var(--danger-red); border-color: #FECACA; }
+
+        /* ══════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════ */
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 14px 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 1px 0 var(--border-grey), 0 4px 20px rgba(0,0,0,0.04); transition: transform 0.3s ease; }
+        header.hidden { transform: translateY(-100%); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+
+        .menu-toggle-btn { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; display: none; align-items: center; justify-content: center; transition: var(--transition); z-index: 1001; }
+        .menu-toggle-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 38px; height: 38px; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); display: flex; align-items: center; justify-content: center; color: var(--text-grey); cursor: pointer; font-size: 1rem; transition: var(--transition); position: relative; text-decoration: none; }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); display: none; }
+
+        .header-avatar-btn { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 30px; cursor: pointer; transition: var(--transition); }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--white); }
+        .header-avatar-name { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+
+        /* ══════════════════════════════════════
+           MAIN LAYOUT
+        ══════════════════════════════════════ */
+        .dashboard-container { margin-top: 72px; padding: 32px 32px 40px; max-width: 1000px; margin-left: auto; margin-right: auto; width: 100%; display: flex; flex-direction: column; align-items: center; height: calc(100vh - 72px);}
+
+        .page-header { margin-bottom: 24px; animation: slideUp 0.5s ease-out; flex-shrink: 0; width: 100%; }
+        .page-title { font-family: var(--font-serif); font-size: 2rem; color: var(--text-dark); margin-bottom: 6px; letter-spacing: -0.5px; }
+        .page-subtitle { color: var(--text-grey); font-size: 0.95rem; font-weight: 500; }
+        
+        .ticket-status-bar { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .ticket-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; font-weight: 700; }
+        .badge-id { background: #EFF6FF; color: var(--bright-blue); border: 1px solid #BFDBFE; }
+        .badge-status-open { background: #D1FAE5; color: var(--dark-green); border: 1px solid #A7F3D0; }
+        .badge-status-closed { background: var(--bg-light-grey); color: var(--text-grey); border: 1px solid var(--border-grey); }
+
+        /* ---- CONTACT CARDS ---- */
+        .contact-grid { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 20px; flex-shrink: 0; width: 100%; scrollbar-width: none; }
+        .contact-grid::-webkit-scrollbar { display: none; }
+        
+        .contact-card { background: var(--white); padding: 20px; border-radius: var(--radius-card); border: 1px solid var(--border-grey); box-shadow: var(--shadow-sm); text-align: center; text-decoration: none; color: var(--text-dark); transition: var(--transition); min-width: 140px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; border-bottom: 3px solid transparent; }
+        .contact-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); border-bottom-color: var(--bright-blue); }
+        .contact-icon { font-size: 1.6rem; color: var(--bright-blue); width: 48px; height: 48px; background: #EFF6FF; border-radius: 14px; display: flex; align-items: center; justify-content: center;}
+        .contact-card h3 { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); margin-top: 4px; }
+        .contact-card p { font-size: 0.85rem; color: var(--text-grey); font-weight: 600; }
+
+        /* ---- CHAT INTERFACE ---- */
+        .chat-wrapper { flex: 1; width: 100%; background: var(--white); border-radius: var(--radius-card); box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); display: flex; flex-direction: column; overflow: hidden; position: relative; animation: slideUp 0.6s ease-out; }
+
+        .chat-messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 18px; background: #F8FAFC; scroll-behavior: smooth; }
+
+        .msg { max-width: 85%; padding: 14px 20px; border-radius: 18px; font-size: 0.95rem; line-height: 1.5; position: relative; font-weight: 500; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); word-wrap: break-word; }
+        @keyframes popIn { from{opacity:0; transform:scale(0.9) translateY(10px);} to{opacity:1; transform:scale(1) translateY(0);} }
+
+        .msg-bot { align-self: flex-start; background: var(--chat-bot-bg); color: var(--text-dark); border-bottom-left-radius: 4px; border: 1px solid var(--border-grey); box-shadow: var(--shadow-sm); }
+        .msg-user { align-self: flex-end; background: var(--gradient-blue); color: var(--white); border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(0, 0, 204, 0.15); }
+        
+        .msg-time { font-size: 0.75rem; margin-top: 8px; opacity: 0.8; text-align: right; display: block; font-weight: 600; }
+        .msg-bot .msg-time { text-align: left; }
+
+        /* Quick Chips */
+        .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+        .chip { background: var(--white); border: 1px solid var(--border-grey); padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 700; color: var(--text-dark); cursor: pointer; transition: var(--transition); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .chip:hover { background: #EFF6FF; border-color: var(--bright-blue); color: var(--primary-blue); transform: translateY(-2px); }
+
+        /* Chat Input */
+        .chat-input-area { padding: 16px 24px; background: var(--white); border-top: 1px solid var(--border-grey); display: flex; gap: 14px; align-items: center; }
+        .chat-input { flex: 1; padding: 14px 24px; border-radius: 30px; border: 1px solid var(--border-grey); background: var(--bg-light-grey); font-family: inherit; font-size: 0.95rem; font-weight: 500; outline: none; transition: var(--transition); color: var(--text-dark); }
+        .chat-input:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 3px #EFF6FF; }
+        
+        .send-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--gradient-blue); color: var(--white); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: var(--transition); flex-shrink: 0; box-shadow: 0 4px 10px rgba(0, 0, 204, 0.2); }
+        .send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 15px rgba(0, 0, 204, 0.3); }
+
+        .typing-indicator { display: none; gap: 6px; padding: 14px 20px; background: var(--chat-bot-bg); border: 1px solid var(--border-grey); border-radius: 20px; width: fit-content; margin-bottom: 15px; align-self: flex-start; border-bottom-left-radius: 4px; margin-left: 20px; box-shadow: var(--shadow-sm);}
+        .dot { width: 8px; height: 8px; background: var(--text-grey); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .resolved-banner { background: #FEF3C7; color: #92400E; text-align: center; padding: 12px; font-size: 0.85rem; font-weight: 700; border-bottom: 1px solid #FDE68A; display: none; justify-content: center; align-items: center; gap: 8px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (min-width: 1024px) {
+            .menu-toggle-btn { display: none !important; }
+            .sidebar { transform: translateX(0); box-shadow: none; }
+            header, .dashboard-container { margin-left: var(--sidebar-w); }
+            header { width: calc(100% - var(--sidebar-w)); left: var(--sidebar-w); }
+            .sidebar-header .close-sidebar { display: none; }
+            .sidebar-overlay { display: none !important; }
+            header .logo-container { display: none; }
+        }
+        @media (max-width: 1023px) {
+            .menu-toggle-btn { display: flex !important; }
+            .dashboard-container { padding: 24px 20px 40px; height: calc(100vh - 60px);}
+            .contact-grid { gap: 12px; }
+            .contact-card { min-width: 120px; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="seeker-dashboard.html" class="sidebar-logo">
+                <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="sidebar-brand">Swifthire</span>
+            </a>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+                <div class="sidebar-user-role">Job Seeker</div>
+            </div>
+            <span class="sidebar-user-badge">Free</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Main Menu</span>
+            <a href="seeker-dashboard.html" class="sidebar-link">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="seeker-profile.html" class="sidebar-link">
+                <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="seeker-browse-jobs.html" class="sidebar-link">
+                <i class="fas fa-search"></i> Browse Jobs
+            </a>
+            <a href="seeker-job-detail.html" class="sidebar-link">
+                <i class="fas fa-file-alt"></i> Job Detail
+            </a>
+            <a href="seeker-saved-jobs.html" class="sidebar-link">
+                <i class="fas fa-bookmark"></i> Saved Jobs
+            </a>
+            <a href="seeker-applications.html" class="sidebar-link">
+                <i class="fas fa-folder-open"></i> My Applications
+                <span class="sidebar-badge" id="sidebarAppCount" style="display:none;">0</span>
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Communication & Support</span>
+            <a href="seeker-messages.html" class="sidebar-link">
+                <i class="fas fa-envelope"></i> Messages
+                <span class="sidebar-badge" id="sidebarMsgCount" style="display:none;">0</span>
+            </a>
+            <a href="seeker-contact.html" class="sidebar-link">
+                <i class="fas fa-address-book"></i> Contact
+            </a>
+            <a href="seeker-help.html" class="sidebar-link active">
+                <i class="fas fa-question-circle"></i> Help
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Account</span>
+            <a href="seeker-settings.html" class="sidebar-link">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a href="seeker-subscriptions.html" class="sidebar-link">
+                <i class="fas fa-crown"></i> Go Pro
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-logout logout-action">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="header-left">
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="seeker-dashboard.html" class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">Swifthire</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="seeker-messages.html" class="header-icon-btn" title="Messages">
+                <i class="fas fa-envelope"></i>
+                <span class="header-notif-dot" id="headerNotifDot"></span>
+            </a>
+            <div class="header-avatar-btn" onclick="window.location='seeker-profile.html'">
+                <div class="header-avatar" id="headerAvatarInit">U</div>
+                <span class="header-avatar-name" id="headerName">...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        
+        <div class="page-header">
+            <h1 class="page-title">Help Center</h1>
+            <p class="page-subtitle">Get instant answers and connect with support.</p>
+            <div id="ticketBadgeArea" class="ticket-status-bar"></div>
+        </div>
+
+        <div class="contact-grid">
+            <a href="#" class="contact-card">
+                <div class="contact-icon"><i class="fas fa-book-open"></i></div>
+                <h3>Knowledge Base</h3>
+                <p>Read Guides</p>
+            </a>
+            <a href="seeker-contact.html" class="contact-card">
+                <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                <h3>Email Support</h3>
+                <p>support@swifthire.com</p>
+            </a>
+            <a href="seeker-contact.html" class="contact-card">
+                <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
+                <h3>Phone Support</h3>
+                <p>1-800-555-0199</p>
+            </a>
+        </div>
+
+        <div class="chat-wrapper">
+            <div class="resolved-banner" id="resolvedBanner">
+                <i class="fas fa-info-circle"></i> This conversation has been marked as resolved.
+            </div>
+            
+            <div class="chat-messages" id="msgContainer">
+                <div style="padding:20px;text-align:center;color:var(--text-grey);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading chat...
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+
+            <div class="chat-input-area" id="inputArea">
+                <input type="text" class="chat-input" id="msgInput" placeholder="Type your message..." autocomplete="off">
+                <button class="send-btn" id="sendBtn" onclick="window.handleSendClick()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        /* TOAST UTILITY */
+        window.showToast = function(message, type, duration) {
+            type = type || 'info'; duration = duration || 3500;
+            var icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span><button class="toast-close" onclick="window.removeToast(this.parentElement)"><i class="fas fa-times"></i></button>';
+            container.appendChild(toast);
+            setTimeout(function() { window.removeToast(toast); }, duration);
+        };
+        window.removeToast = function(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.add('removing');
+            setTimeout(function() { if (toast.parentElement) toast.parentElement.removeChild(toast); }, 350);
+        };
+
+        /* SIDEBAR TOGGLE */
+        var menuBtn = document.getElementById('menuToggleBtn'), sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay'), closeBtn = document.getElementById('closeSidebar');
+        function openSidebar()  { sidebar.classList.add('open');  overlay.classList.add('show'); }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+        if (menuBtn)  menuBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+        /* HEADER SCROLL */
+        var lastY = window.scrollY, header = document.getElementById('header');
+        window.addEventListener('scroll', function() {
+            var currY = window.scrollY;
+            if (Math.abs(currY - lastY) < 8) return;
+            header.classList.toggle('hidden', currY > lastY && currY > 70);
+            lastY = currY;
+        }, { passive: true });
+
+        /* UTILS */
+        window.escapeHTML = function(str) {
+            return String(str).replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag]));
+        };
+
+        window.formatTime = function(dateInput) {
+            if(!dateInput) return '';
+            const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
+            const now = new Date();
+            const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            
+            if(isToday) {
+                return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else {
+                return date.toLocaleDateString([], {month: 'short', day: 'numeric'});
+            }
+        };
+
+        window.handleSendClick = function() {
+            const msgInput = document.getElementById('msgInput');
+            const text = msgInput.value.trim();
+            if (!text) return;
+            window.sendUserMessage(text);
+        };
+
+        document.getElementById('msgInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') window.handleSendClick();
+        });
+
+    </script>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+            authDomain: "skilllink69-122aa.firebaseapp.com",
+            projectId: "skilllink69-122aa",
+            storageBucket: "skilllink69-122aa.firebasestorage.app",
+            messagingSenderId: "673456146518",
+            appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+            measurementId: "G-H69LL8HKYQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firebaseAuth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentUserEmail = '';
+
+        function showIndexError(error) {
+            if(error.message && error.message.includes("requires an index")) {
+                const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+                if(linkMatch) {
+                    document.body.innerHTML += `
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                        <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                        <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                    </div>`;
+                }
+            }
+        }
+
+        function setupRealtimeListeners(uid) {
+            const appsQuery = query(collection(db, "applications"), where("userId", "==", uid));
+            onSnapshot(appsQuery, (snap) => {
+                const badge = document.getElementById('sidebarAppCount');
+                if (badge) {
+                    badge.textContent = snap.size;
+                    badge.style.display = snap.size > 0 ? 'inline-block' : 'none';
+                }
+            }, (error) => console.error(error));
+
+            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
+            onSnapshot(chatsQuery, (snap) => {
+                let unread = 0;
+                snap.forEach(d => { if(d.data().unreadCount_seeker > 0) unread++; });
+                const badge = document.getElementById('sidebarMsgCount');
+                const notifDot = document.getElementById('headerNotifDot');
+                if(badge) {
+                    badge.textContent = unread;
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+                if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+            }, (error) => console.error(error));
+        }
+
+        onAuthStateChanged(firebaseAuth, async (user) => {
+            if (user) {
+                currentUser = user;
+                currentUserEmail = user.email || '';
+                try {
+                    setupRealtimeListeners(user.uid);
+
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        
+                        const fullName = userData.fullName || userData.name || 'Job Seeker';
+                        if(!currentUserEmail) currentUserEmail = userData.email || '';
+                        
+                        const nameParts = fullName.trim().split(" ");
+                        
+                        let initial = 'U';
+                        if (nameParts.length > 1) {
+                            initial = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+                        } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                            initial = nameParts[0].charAt(0).toUpperCase();
+                        }
+
+                        document.getElementById('sidebarAvatarInit').textContent = initial;
+                        document.getElementById('sidebarName').textContent = fullName;
+                        document.getElementById('headerAvatarInit').textContent = initial;
+                        document.getElementById('headerName').textContent = nameParts[0] || 'User';
+                    }
+                    
+                    loadHelpTicket(user.uid);
+
+                } catch (error) {
+                    console.error("Error fetching profile:", error);
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        let activeTicketId = null;
+        let messagesUnsub = null;
+
+        function loadHelpTicket(uid) {
+            // Find an open ticket to use for the help chat
+            const q = query(collection(db, "supportTickets"), where("userId", "==", uid), where("status", "==", "open"));
+            onSnapshot(q, (snapshot) => {
+                if (!snapshot.empty) {
+                    // Use the most recent open ticket
+                    let latestDoc = null;
+                    let latestTime = 0;
+                    snapshot.forEach(d => {
+                        const t = d.data().updatedAt?.toMillis() || 0;
+                        if(t >= latestTime) { latestTime = t; latestDoc = d; }
+                    });
+                    
+                    if(latestDoc) {
+                        activeTicketId = latestDoc.id;
+                        document.getElementById('ticketBadgeArea').innerHTML = `
+                            <span class="ticket-badge badge-id"><i class="fas fa-hashtag"></i> TK-${activeTicketId.substring(0,6).toUpperCase()}</span>
+                            <span class="ticket-badge badge-status-open"><i class="fas fa-circle-notch fa-spin"></i> Open</span>
+                        `;
+                        listenToMessages(activeTicketId);
+                        
+                        // Clear unread flag for user since they are looking at it
+                        updateDoc(doc(db, "supportTickets", activeTicketId), { hasUnreadUser: false }).catch(e=>console.error(e));
+                    }
+                } else {
+                    activeTicketId = null;
+                    if(messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+                    const userName = document.getElementById('headerName').textContent || 'there';
+                    const msgContainer = document.getElementById('msgContainer');
+                    msgContainer.innerHTML = `
+                        <div class="msg msg-bot">
+                            Hello <span>${window.escapeHTML(userName)}</span>! I'm the Swifthire virtual assistant. How can I help you today?
+                            <span class="msg-time">Just now</span>
+                            <div class="quick-actions">
+                                <div class="chip" onclick="window.sendUserMessage('Profile Verification')">Profile Verification</div>
+                                <div class="chip" onclick="window.sendUserMessage('Application Status')">Application Status</div>
+                                <div class="chip" onclick="window.sendUserMessage('Billing Issue')">Billing Issue</div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('ticketBadgeArea').innerHTML = '';
+                }
+            }, (error) => {
+                console.error("Error loading tickets:", error);
+                showIndexError(error);
+            });
+        }
+
+        function listenToMessages(ticketId) {
+            if(messagesUnsub) messagesUnsub();
+            const q = query(collection(db, "supportTickets", ticketId, "messages"), orderBy("createdAt", "asc"));
+            
+            messagesUnsub = onSnapshot(q, (snapshot) => {
+                let html = '';
+                snapshot.forEach(docSnap => {
+                    const msg = docSnap.data();
+                    const isUser = msg.sender === 'user';
+                    const type = isUser ? 'user' : 'bot';
+                    const timeStr = msg.createdAt ? window.formatTime(msg.createdAt) : 'Just now';
+                    
+                    html += `
+                        <div class="msg msg-${type}">
+                            ${window.escapeHTML(msg.text)}
+                            <span class="msg-time">${timeStr}</span>
+                        </div>
+                    `;
+                });
+                const msgContainer = document.getElementById('msgContainer');
+                if(html) {
+                    msgContainer.innerHTML = html;
+                    msgContainer.scrollTop = msgContainer.scrollHeight;
+                }
+            }, (error) => {
+                console.error("Error loading messages:", error);
+                showIndexError(error);
+            });
+        }
+
+        window.sendUserMessage = async function(text) {
+            if (!text || !currentUser) return;
+            const input = document.getElementById('msgInput');
+            input.value = '';
+
+            try {
+                // Show typing indicator visually
+                const typingIndicator = document.getElementById('typingIndicator');
+                typingIndicator.style.display = 'flex';
+                const msgContainer = document.getElementById('msgContainer');
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+
+                if (!activeTicketId) {
+                    // Create a new support ticket that admin-support.html can read
+                    const docRef = await addDoc(collection(db, "supportTickets"), {
+                        userId: currentUser.uid,
+                        userEmail: currentUserEmail,
+                        subject: "Help Center Inquiry: " + text.substring(0, 30),
+                        status: 'open',
+                        hasUnreadAdmin: true,
+                        hasUnreadUser: false,
+                        lastMessage: text,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                    activeTicketId = docRef.id;
+                } else {
+                    // Update existing ticket
+                    await updateDoc(doc(db, "supportTickets", activeTicketId), {
+                        lastMessage: text,
+                        updatedAt: serverTimestamp(),
+                        hasUnreadAdmin: true
+                    });
+                }
+
+                // Add user message to the subcollection
+                await addDoc(collection(db, "supportTickets", activeTicketId, "messages"), {
+                    sender: 'user',
+                    role: 'user',
+                    text: text,
+                    createdAt: serverTimestamp()
+                });
+
+                typingIndicator.style.display = 'none';
+
+            } catch (error) {
+                console.error("Error sending message:", error);
+                window.showToast("Error sending message.", "error");
+                document.getElementById('typingIndicator').style.display = 'none';
+            }
+        };
+
+        const logoutBtns = document.querySelectorAll('.logout-action');
+        logoutBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
+                signOut(firebaseAuth).then(() => {
+                    window.location.href = "index.html";
+                }).catch(err => {
+                    console.error("Logout error:", err);
+                    window.showToast('Error signing out.', 'error');
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
+                });
+            });
+        });
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

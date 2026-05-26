@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Saved Jobs | Swifthire</title>
+
+    <meta name="description" content="View and manage your saved job listings on Swifthire.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════
+           DESIGN TOKENS
+        ═══════════════════════════════════════════ */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg,#0000CC,#3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --amber:          #F59E0B;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            --shadow-card:    0 10px 25px rgba(0,0,0,.05);
+            --transition:     all .3s cubic-bezier(.4,0,.2,1);
+            --radius-card:    20px;
+            --sidebar-w:      280px;
+        }
+
+        *  { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body {
+            font-family: var(--font-main);
+            color: var(--text-grey);
+            background-color: #F8FAFC;
+            background-image:
+                radial-gradient(at 0% 0%,   hsla(210,100%,95%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%,hsla(160,100%,95%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--white); box-shadow: 4px 0 24px rgba(0,0,0,0.06); z-index: 2000; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey); }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { padding: 28px 24px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); background: linear-gradient(135deg, #EFF6FF, #F8FAFC); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 38px; height: 38px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 34px; height: 34px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 0.9rem; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .sidebar-user { padding: 20px 24px; border-bottom: 1px solid var(--border-grey); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,204,0.25); }
+        .sidebar-user-info { flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-weight: 800; color: var(--text-dark); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+        .sidebar-user-badge { background: linear-gradient(135deg,#FEF3C7,#FDE68A); border: 1px solid #FCD34D; color: #92400E; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+
+        .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 2px; flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-left: 3px solid transparent; position: relative; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); border-left-color: rgba(0,0,204,0.3); }
+        .sidebar-link.active { color: var(--primary-blue); background: linear-gradient(90deg, #EFF6FF, #F8FAFC); border-left-color: var(--primary-blue); font-weight: 700; }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-section-label { padding: 14px 24px 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-grey); text-transform: uppercase; letter-spacing: 0.8px; }
+        
+        .sidebar-badge { background: var(--gradient-blue); color: var(--white); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: auto; }
+
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 14px; color: var(--text-grey); font-family: var(--font-main); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: var(--transition); justify-content: center; }
+        .sidebar-logout:hover { background: var(--danger-bg); color: var(--danger-red); border-color: #FECACA; }
+
+        /* ══════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════ */
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 14px 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 1px 0 var(--border-grey), 0 4px 20px rgba(0,0,0,0.04); transition: transform 0.3s ease; border-bottom: 1px solid rgba(229,231,235,0.8); }
+        header.hidden { transform: translateY(-100%); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+
+        .menu-toggle-btn { background: var(--bg-light-grey); border: 1px solid var(--border-grey); width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; color: var(--text-dark); cursor: pointer; display: none; align-items: center; justify-content: center; transition: var(--transition); z-index: 1001; }
+        .menu-toggle-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 38px; height: 38px; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 800; color: var(--primary-blue); }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); display: flex; align-items: center; justify-content: center; color: var(--text-grey); cursor: pointer; font-size: 1rem; transition: var(--transition); position: relative; text-decoration: none; }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); display: none; }
+
+        .header-avatar-btn { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; background: var(--bg-light-grey); border: 1px solid var(--border-grey); border-radius: 30px; cursor: pointer; transition: var(--transition); }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--white); }
+        .header-avatar-name { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); }
+
+        /* ═══════════════════════════════════════════
+           MAIN LAYOUT
+        ═══════════════════════════════════════════ */
+        .dashboard-container {
+            margin-top: 85px;
+            padding: 30px 5%;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        /* ═══════════════════════════════════════════
+           PAGE HEADER
+        ═══════════════════════════════════════════ */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .page-title   { font-family:var(--font-serif); font-size:2rem; color:var(--primary-blue); margin-bottom:5px; }
+        .page-subtitle{ color:var(--text-grey); font-size:.95rem; font-weight:500; }
+
+        .saved-badge {
+            background: #EFF6FF;
+            color: var(--primary-blue);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: .9rem;
+            border: 1px solid #c7d2fe;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        /* ═══════════════════════════════════════════
+           FILTER / SORT BAR
+        ═══════════════════════════════════════════ */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-chip {
+            background: var(--white);
+            border: 1.5px solid var(--border-grey);
+            color: var(--text-dark);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-chip:hover,
+        .filter-chip.active {
+            background: #EFF6FF;
+            border-color: var(--bright-blue);
+            color: var(--primary-blue);
+        }
+        .filter-chip i { font-size: .8rem; }
+
+        .sort-select {
+            margin-left: auto;
+            background: var(--white);
+            border: 1.5px solid var(--border-grey);
+            color: var(--text-dark);
+            padding: 9px 14px;
+            border-radius: 30px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font-main);
+            outline: none;
+            transition: var(--transition);
+        }
+        .sort-select:hover,
+        .sort-select:focus { border-color: var(--bright-blue); }
+
+        /* ═══════════════════════════════════════════
+           JOB CARDS
+        ═══════════════════════════════════════════ */
+        .jobs-list { display:flex; flex-direction:column; gap:20px; }
+
+        .job-card {
+            background: var(--white);
+            border-radius: var(--radius-card);
+            padding: 25px;
+            display: flex;
+            gap: 20px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-grey);
+            border-left: 5px solid var(--bright-blue);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .job-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,.08);
+            border-left-color: var(--primary-blue);
+        }
+        .job-card.removing {
+            opacity: 0;
+            transform: translateX(40px) scale(.97);
+            pointer-events: none;
+            transition: opacity .35s ease, transform .35s ease;
+        }
+
+        /* Logo */
+        .job-logo {
+            width: 68px; height: 68px;
+            background: linear-gradient(135deg, #EFF6FF, #E0E7FF);
+            border-radius: 16px;
+            display: flex; align-items:center; justify-content:center;
+            font-size: 1.5rem; font-weight: 800; color: var(--primary-blue);
+            flex-shrink: 0;
+            border: 1px solid #BFDBFE;
+            cursor: pointer;
+        }
+
+        /* Body */
+        .job-body { flex:1; cursor:pointer; }
+        .job-title {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 4px;
+        }
+        .job-company {
+            font-size: .9rem;
+            color: var(--text-grey);
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex; align-items:center; gap:6px;
+        }
+        .job-company i { color:var(--bright-blue); }
+
+        .job-meta-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+        .job-meta-item {
+            display: flex; align-items:center; gap:6px;
+            font-size: .82rem; font-weight:700;
+            color: var(--text-dark);
+            background: var(--bg-light-grey);
+            padding: 5px 13px;
+            border-radius: 30px;
+        }
+        .job-meta-item i { color:var(--primary-blue); font-size:.75rem; }
+
+        /* Tags */
+        .job-tags { display:flex; flex-wrap:wrap; gap:8px; }
+        .job-tag {
+            font-size: .78rem; font-weight:700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border-grey);
+            color: var(--text-grey);
+            background: var(--white);
+        }
+        .job-tag.hot   { border-color:#fca5a5; color:#dc2626; background:#fef2f2; }
+        .job-tag.new   { border-color:#86efac; color:var(--dark-green); background:#f0fdf4; }
+        .job-tag.remote{ border-color:#c7d2fe; color:var(--primary-blue); background:#EFF6FF; }
+
+        /* Actions Panel */
+        .job-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 155px;
+            border-left: 1px solid var(--border-grey);
+            padding-left: 20px;
+        }
+        .job-salary {
+            font-size: 1.05rem; font-weight:800;
+            color: var(--dark-green);
+            text-align: right;
+            line-height: 1.3;
+        }
+        .job-salary small { font-size:.75rem; font-weight:600; color:var(--text-grey); display:block; }
+        .job-posted { font-size:.78rem; color:#9CA3AF; font-weight:600; text-align:right; }
+
+        .action-buttons { display:flex; gap:8px; width:100%; justify-content:flex-end; }
+
+        .btn-apply {
+            background: var(--gradient-blue);
+            color: var(--white);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 700; font-size:.88rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex; align-items:center; gap:6px;
+            font-family: var(--font-main);
+            box-shadow: 0 4px 10px rgba(0,0,204,.2);
+            flex: 1; justify-content:center;
+        }
+        .btn-apply:hover { transform:translateY(-2px); box-shadow:0 6px 15px rgba(0,0,204,.3); }
+
+        .btn-remove {
+            background: var(--white);
+            color: var(--danger-red);
+            border: 2px solid #fecaca;
+            padding: 10px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex; align-items:center; justify-content:center;
+            width: 40px; height: 40px;
+        }
+        .btn-remove:hover { background:var(--danger-bg); border-color:var(--danger-red); }
+
+        /* ═══════════════════════════════════════════
+           EMPTY STATE
+        ═══════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 90px 20px;
+            background: var(--white);
+            border-radius: 24px;
+            border: 2px dashed var(--border-grey);
+            box-shadow: var(--shadow-card);
+        }
+        .empty-icon  { font-size:4.5rem; color:#D1D5DB; margin-bottom:20px; }
+        .empty-title { font-family:var(--font-serif); font-size:1.7rem; color:var(--primary-blue); margin-bottom:10px; font-weight:800; }
+        .empty-text  { color:var(--text-grey); margin-bottom:30px; font-weight:500; font-size:1rem; max-width:380px; margin-left:auto; margin-right:auto; line-height:1.7; }
+        .btn-browse  {
+            background: var(--gradient-blue);
+            color: var(--white);
+            border: none;
+            padding: 14px 30px;
+            border-radius: 30px;
+            font-weight: 700; font-size:1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(0,0,204,.2);
+            font-family: var(--font-main);
+            text-decoration: none;
+            display: inline-flex; align-items:center; gap:8px;
+        }
+        .btn-browse:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,204,.3); color:var(--white); }
+
+        /* ═══════════════════════════════════════════
+           TOAST
+        ═══════════════════════════════════════════ */
+        #toastContainer { position:fixed; bottom:28px; right:22px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+        .toast {
+            display: flex; align-items:center; gap:12px;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 14px 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.12);
+            border-left: 4px solid var(--bright-blue);
+            font-size: .9rem; font-weight:700; color:var(--text-dark);
+            pointer-events: all;
+            animation: toastIn .3s ease;
+            min-width: 260px; max-width: 340px;
+        }
+        .toast.success { border-color: var(--success-green); }
+        .toast.success i { color: var(--success-green); }
+        .toast.error   { border-color: var(--danger-red); }
+        .toast.error   i { color: var(--danger-red); }
+        .toast.info    i { color: var(--bright-blue); }
+        .toast i       { font-size:1.1rem; flex-shrink:0; }
+        .toast span    { flex:1; }
+        .toast-close   { background:none; border:none; color:#9CA3AF; cursor:pointer; font-size:.8rem; padding:2px 4px; pointer-events:all; }
+        .toast.removing{ animation:toastOut .3s ease forwards; }
+
+        @keyframes toastIn  { from{ opacity:0; transform:translateY(12px) scale(.97);} to{ opacity:1; transform:none;} }
+        @keyframes toastOut { to  { opacity:0; transform:translateX(20px) scale(.97);} }
+
+        /* ═══════════════════════════════════════════
+           SKELETON LOADER
+        ═══════════════════════════════════════════ */
+        .skeleton-card {
+            background: var(--white);
+            border-radius: var(--radius-card);
+            padding: 25px;
+            display: flex; gap:20px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-grey);
+            border-left: 5px solid #E5E7EB;
+        }
+        .skel { background: #E5E7EB; border-radius: 8px; animation: shimmer 1.5s infinite linear; background-size: 400% 100%; background-image: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); }
+        .skel-logo   { width:68px; height:68px; border-radius:16px; flex-shrink:0; }
+        .skel-body   { flex:1; display:flex; flex-direction:column; gap:10px; }
+        .skel-line   { height:14px; }
+        .skel-line.w70{ width:70%; }
+        .skel-line.w45{ width:45%; }
+        .skel-line.w30{ width:30%; }
+
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position:-200% 0; }
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (min-width:1024px) {
+            .menu-toggle-btn { display:none !important; }
+            .sidebar { transform:translateX(0); box-shadow:none; }
+            header,
+            .dashboard-container { margin-left:var(--sidebar-w); width:calc(100% - var(--sidebar-w)); }
+            header { left:var(--sidebar-w); }
+            .sidebar-header .close-sidebar { display:none; }
+            .sidebar-overlay { display:none !important; }
+            header .logo-container { display:none; }
+        }
+        @media (max-width:1023px) {
+            .menu-toggle-btn { display:flex !important; }
+            .dashboard-container { padding: 24px 20px 40px; }
+        }
+        @media (max-width:680px) {
+            .job-card     { flex-direction:column; gap:12px; padding:18px; }
+            .job-actions  {
+                border-left: none; border-top: 1px solid var(--border-grey);
+                padding-left:0; padding-top:15px;
+                flex-direction:row; flex-wrap:wrap;
+                align-items:flex-start;
+                min-width:unset; width:100%;
+            }
+            .job-salary, .job-posted { text-align:left; }
+            .filter-bar   { gap:8px; }
+            .sort-select  { margin-left:0; width:100%; }
+            .page-title   { font-size:1.6rem; }
+            
+            .logo-text { display: none; }
+            header { padding: 10px 15px; }
+            .header-avatar-name { display: none; }
+            .header-right { gap: 5px; }
+            .header-avatar-btn { padding: 4px; }
+            .header-icon-btn { width: 36px; height: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="seeker-dashboard.html" class="sidebar-logo">
+            <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                <circle cx="62" cy="24" r="10" fill="#000000"/>
+                <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+            </svg>
+            <span class="sidebar-brand">Swifthire</span>
+        </a>
+        <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+        <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+            <div class="sidebar-user-role">Job Seeker</div>
+        </div>
+        <span class="sidebar-user-badge">Free</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <span class="sidebar-section-label">Main Menu</span>
+        <a href="seeker-dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="seeker-profile.html" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+        <a href="seeker-browse-jobs.html" class="sidebar-link"><i class="fas fa-search"></i> Browse Jobs</a>
+        <a href="seeker-job-detail.html" class="sidebar-link"><i class="fas fa-file-alt"></i> Job Detail</a>
+        <a href="seeker-saved-jobs.html" class="sidebar-link active"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+        <a href="seeker-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> My Applications <span class="sidebar-badge" id="sidebarAppCount">0</span></a>
+        <a href="seeker-messages.html" class="sidebar-link"><i class="fas fa-envelope"></i> Messages <span class="sidebar-badge" id="sidebarMsgCount">0</span></a>
+
+        <span class="sidebar-section-label" style="margin-top:12px;">Account & Support</span>
+        <a href="seeker-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+        <a href="seeker-contact.html" class="sidebar-link"><i class="fas fa-address-book"></i> Contact</a>
+        <a href="seeker-help.html" class="sidebar-link"><i class="fas fa-question-circle"></i> Help</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <button class="sidebar-logout logout-action" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Sign Out
+        </button>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════ -->
+<header id="header">
+    <div class="header-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a href="seeker-dashboard.html" class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                <circle cx="62" cy="24" r="10" fill="#000000"/>
+                <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+            </svg>
+            <span class="logo-text">Swifthire</span>
+        </a>
+    </div>
+    <div class="header-right">
+        <a href="seeker-browse-jobs.html" class="header-icon-btn" title="Browse Jobs">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="seeker-messages.html" class="header-icon-btn" title="Messages">
+            <i class="fas fa-envelope"></i>
+            <span class="header-notif-dot" id="headerNotifDot"></span>
+        </a>
+        <div class="header-avatar-btn" onclick="window.location='seeker-profile.html'">
+            <div class="header-avatar" id="headerAvatarInit">U</div>
+            <span class="header-avatar-name" id="headerName">...</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<main class="dashboard-container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Saved Jobs</h1>
+            <p class="page-subtitle">Review and apply to jobs you've bookmarked for later.</p>
+        </div>
+        <div class="saved-badge">
+            <i class="fas fa-bookmark"></i>
+            <span id="savedCountText">0</span> Saved
+        </div>
+    </div>
+
+    <!-- Filter / Sort Bar -->
+    <div class="filter-bar" id="filterBar">
+        <button class="filter-chip active" data-filter="all" onclick="window.filterJobs('all',this)">
+            <i class="fas fa-layer-group"></i> All
+        </button>
+        <button class="filter-chip" data-filter="Full-time" onclick="window.filterJobs('Full-time',this)">
+            <i class="fas fa-briefcase"></i> Full-time
+        </button>
+        <button class="filter-chip" data-filter="Remote" onclick="window.filterJobs('Remote',this)">
+            <i class="fas fa-wifi"></i> Remote
+        </button>
+        <button class="filter-chip" data-filter="Contract" onclick="window.filterJobs('Contract',this)">
+            <i class="fas fa-file-signature"></i> Contract
+        </button>
+        <select class="sort-select" id="sortSelect" onchange="window.sortJobs(this.value)">
+            <option value="newest">Sort: Newest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+            <option value="salary_high">Sort: Salary High–Low</option>
+            <option value="salary_low">Sort: Salary Low–High</option>
+        </select>
+    </div>
+
+    <!-- Jobs List -->
+    <div class="jobs-list" id="savedJobsContainer">
+        <!-- Skeleton loaders shown on init -->
+        <div class="skeleton-card">
+            <div class="skel skel-logo"></div>
+            <div class="skel-body">
+                <div class="skel skel-line w70"></div>
+                <div class="skel skel-line w45"></div>
+                <div class="skel skel-line w30"></div>
+            </div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skel skel-logo"></div>
+            <div class="skel-body">
+                <div class="skel skel-line w70"></div>
+                <div class="skel skel-line w45"></div>
+                <div class="skel skel-line w30"></div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+/* ─────────────────────────────────────────
+   SIDEBAR + SCROLL HIDE
+───────────────────────────────────────── */
+(function () {
+    var sidebar    = document.getElementById('sidebar');
+    var overlay    = document.getElementById('sidebarOverlay');
+    var menuBtn    = document.getElementById('menuToggleBtn');
+    var closeBtn   = document.getElementById('closeSidebar');
+    var header     = document.getElementById('header');
+    var lastY      = window.scrollY;
+
+    function toggle() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+    }
+    if (menuBtn)  menuBtn.addEventListener('click', toggle);
+    if (closeBtn) closeBtn.addEventListener('click', toggle);
+    if (overlay)  overlay.addEventListener('click', toggle);
+
+    window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        if (Math.abs(y - lastY) < 10) return;
+        header.classList.toggle('hidden', y > lastY && y > 60);
+        lastY = y;
+    }, { passive: true });
+})();
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+window.showToast = function(msg, type, duration) {
+    type     = type     || 'success';
+    duration = duration || 3200;
+    var icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+    var container = document.getElementById('toastContainer');
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.innerHTML =
+        '<i class="fas ' + (icons[type] || icons.info) + '"></i>' +
+        '<span>' + msg + '</span>' +
+        '<button class="toast-close" onclick="window.dismissToast(this.parentElement)"><i class="fas fa-times"></i></button>';
+    container.appendChild(t);
+    setTimeout(function () { window.dismissToast(t); }, duration);
+};
+
+window.dismissToast = function(el) {
+    if (!el || !el.parentElement) return;
+    el.classList.add('removing');
+    setTimeout(function () { el.remove(); }, 320);
+};
+
+/* ─────────────────────────────────────────
+   STATE & HELPERS
+───────────────────────────────────────── */
+window.allJobs = [];
+window.currentFilter = 'all';
+window.currentSort   = 'newest';
+
+window.fmtCurrency = function(val) {
+    if (!val) return 'Negotiable';
+    return 'KSh ' + Number(val).toLocaleString();
+};
+
+window.formatRelativeTime = function(dateInput) {
+    if (!dateInput) return 'Recently';
+    var date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
+    var diff = Math.floor((new Date() - date) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+};
+
+/* ─────────────────────────────────────────
+   BUILD CARD HTML
+───────────────────────────────────────── */
+window.buildCard = function(job) {
+    var tagHTML = (job.tags || []).map(function (tag) {
+        var cls = '';
+        if (tag.toLowerCase() === 'hot')    cls = 'hot';
+        else if (tag.toLowerCase() === 'new')    cls = 'new';
+        else if (tag.toLowerCase() === 'remote') cls = 'remote';
+        return '<span class="job-tag ' + cls + '">' + tag + '</span>';
+    }).join('');
+
+    var logoText = job.logo || (job.company ? job.company.substring(0, 2).toUpperCase() : 'CO');
+    var minSal = job.salary && job.salary.min ? job.salary.min : null;
+    var maxSal = job.salary && job.salary.max ? job.salary.max : null;
+    var salaryStr = minSal ? (window.fmtCurrency(minSal) + (maxSal ? ' – ' + window.fmtCurrency(maxSal) : '')) : 'Negotiable';
+
+    return [
+        '<div class="job-card" id="job-card-' + job.id + '">',
+
+        '  <div class="job-logo" onclick="window.goDetail(\'' + job.id + '\')">' + logoText + '</div>',
+
+        '  <div class="job-body" onclick="window.goDetail(\'' + job.id + '\')">',
+        '    <h3 class="job-title">'   + (job.title || 'Untitled Role') + '</h3>',
+        '    <p class="job-company"><i class="fas fa-building"></i> ' + (job.company || 'Unknown Company') + '</p>',
+        '    <div class="job-meta-row">',
+        '      <span class="job-meta-item"><i class="fas fa-map-marker-alt"></i>' + (job.location || 'Remote') + '</span>',
+        '      <span class="job-meta-item"><i class="fas fa-briefcase"></i>'       + (job.type || 'Full-time') + '</span>',
+        '    </div>',
+        '    <div class="job-tags">' + tagHTML + '</div>',
+        '  </div>',
+
+        '  <div class="job-actions">',
+        '    <div style="width:100%">',
+        '      <div class="job-salary">' + salaryStr + '<small>per month</small></div>',
+        '      <div class="job-posted"><i class="far fa-clock"></i> Posted ' + window.formatRelativeTime(job.postedAt) + '</div>',
+        '    </div>',
+        '    <div class="action-buttons">',
+        '      <button class="btn-apply"   onclick="window.applyNow(\'' + job.id + '\')"><i class="fas fa-paper-plane"></i> Apply Now</button>',
+        '      <button class="btn-remove"  onclick="window.removeJob(\'' + job.id + '\')" title="Remove saved job"><i class="fas fa-trash-alt"></i></button>',
+        '    </div>',
+        '  </div>',
+
+        '</div>'
+    ].join('');
+};
+
+/* ─────────────────────────────────────────
+   RENDER
+───────────────────────────────────────── */
+window.render = function(jobs) {
+    var container = document.getElementById('savedJobsContainer');
+    var countEl   = document.getElementById('savedCountText');
+
+    countEl.textContent = window.allJobs.length;
+
+    if (jobs.length === 0) {
+        container.innerHTML =
+            '<div class="empty-state">' +
+            '  <div class="empty-icon"><i class="far fa-bookmark"></i></div>' +
+            '  <h3 class="empty-title">No saved jobs yet</h3>' +
+            '  <p class="empty-text">You haven\'t bookmarked any jobs. Browse our listings and tap the save icon on jobs you like to find them here.</p>' +
+            '  <a href="seeker-browse-jobs.html" class="btn-browse"><i class="fas fa-search"></i> Find Jobs</a>' +
+            '</div>';
+        return;
+    }
+
+    container.innerHTML = jobs.map(window.buildCard).join('');
+};
+
+/* ─────────────────────────────────────────
+   FILTER & SORT
+───────────────────────────────────────── */
+window.getProcessedJobs = function() {
+    var source = window.allJobs;
+
+    var filtered = source.filter(function (j) {
+        if (window.currentFilter === 'all') return true;
+        
+        const loc = (j.location || '').toLowerCase();
+        const tags = (j.tags || []).map(t => t.toLowerCase());
+        const type = (j.type || '');
+        
+        if (window.currentFilter === 'Remote') {
+            return loc.includes('remote') || tags.includes('remote') || type.toLowerCase() === 'remote';
+        }
+        return type === window.currentFilter;
+    });
+
+    filtered.sort(function (a, b) {
+        if (window.currentSort === 'newest')      return b.savedAt - a.savedAt;
+        if (window.currentSort === 'oldest')      return a.savedAt - b.savedAt;
+        
+        let aMax = a.salary && a.salary.max ? a.salary.max : 0;
+        let bMax = b.salary && b.salary.max ? b.salary.max : 0;
+        let aMin = a.salary && a.salary.min ? a.salary.min : 0;
+        let bMin = b.salary && b.salary.min ? b.salary.min : 0;
+        
+        if (window.currentSort === 'salary_high') return bMax - aMax;
+        if (window.currentSort === 'salary_low')  return aMin - bMin;
+        return 0;
+    });
+
+    return filtered;
+};
+
+window.filterJobs = function(filter, btn) {
+    window.currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    window.render(window.getProcessedJobs());
+};
+
+window.sortJobs = function(val) {
+    window.currentSort = val;
+    window.render(window.getProcessedJobs());
+};
+
+/* ─────────────────────────────────────────
+   ACTIONS
+───────────────────────────────────────── */
+window.goDetail = function(id) {
+    window.location.href = 'seeker-job-detail.html?id=' + id;
+};
+
+window.applyNow = function(id) {
+    window.location.href = 'seeker-job-detail.html?id=' + id + '&apply=true';
+};
+</script>
+
+<!-- FIREBASE MODULE -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, onSnapshot, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+        authDomain: "skilllink69-122aa.firebaseapp.com",
+        projectId: "skilllink69-122aa",
+        storageBucket: "skilllink69-122aa.firebasestorage.app",
+        messagingSenderId: "673456146518",
+        appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+        measurementId: "G-H69LL8HKYQ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const firebaseAuth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let savedJobsUnsubscribe = null;
+
+    // Check Auth State & Load Profile Data
+    onAuthStateChanged(firebaseAuth, async (user) => {
+        if (user) {
+            currentUser = user;
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    const fullName = userData.fullName || userData.name || 'Job Seeker';
+                    const nameParts = fullName.trim().split(" ");
+                    
+                    let initial = 'U';
+                    if (nameParts.length > 1) {
+                        initial = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                        initial = nameParts[0].charAt(0).toUpperCase();
+                    }
+
+                    // Populate Header Avatar
+                    const headerAvatar = document.getElementById('headerAvatarInit');
+                    const headerName = document.getElementById('headerName');
+                    if (headerAvatar) headerAvatar.textContent = initial;
+                    if (headerName) headerName.textContent = nameParts[0] || 'User';
+
+                    // Populate Sidebar Avatar
+                    const sidebarAvatar = document.getElementById('sidebarAvatarInit');
+                    const sidebarName = document.getElementById('sidebarName');
+                    if (sidebarAvatar) sidebarAvatar.textContent = initial;
+                    if (sidebarName) sidebarName.textContent = fullName;
+                }
+                
+                setupSavedJobsListener(user.uid);
+
+                // Listen for Applications Count to update Sidebar
+                const appsQuery = query(collection(db, "applications"), where("userId", "==", user.uid));
+                onSnapshot(appsQuery, (snap) => {
+                    const badge = document.getElementById('sidebarAppCount');
+                    if (badge) badge.textContent = snap.size;
+                }, (error) => {
+                    console.error("Applications Error:", error);
+                });
+
+                // Listen for Messages Count to update Sidebar
+                const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", user.uid));
+                onSnapshot(chatsQuery, (snap) => {
+                    let unread = 0;
+                    snap.forEach(d => {
+                        if(d.data().unreadCount_seeker > 0) unread++;
+                    });
+                    const badge = document.getElementById('sidebarMsgCount');
+                    const notifDot = document.getElementById('headerNotifDot');
+                    if(badge) badge.textContent = unread;
+                    if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+                }, (error) => {
+                    console.error("Chats Error:", error);
+                });
+                
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        } else {
+            // Not logged in, redirect to home
+            window.location.href = "index.html";
+        }
+    });
+
+    function setupSavedJobsListener(uid) {
+        // Query global savedJobs collection for this user's saved jobs
+        const savedRef = collection(db, "savedJobs");
+        const q = query(savedRef, where("userId", "==", uid));
+        
+        savedJobsUnsubscribe = onSnapshot(q, async (snapshot) => {
+            const savedJobIds = [];
+            const savedAtMap = {};
+
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.jobId) {
+                    savedJobIds.push(data.jobId);
+                    savedAtMap[data.jobId] = data.savedAt;
+                }
+            });
+
+            if (savedJobIds.length === 0) {
+                window.allJobs = [];
+                window.render(window.getProcessedJobs());
+                return;
+            }
+
+            try {
+                // Fetch job details for each saved job
+                const jobPromises = savedJobIds.map(id => getDoc(doc(db, "jobs", id)));
+                const jobSnaps = await Promise.all(jobPromises);
+
+                const fetchedJobs = [];
+                jobSnaps.forEach(snap => {
+                    if (snap.exists()) {
+                        const jData = snap.data();
+                        jData.id = snap.id;
+                        // Use savedAt from the savedJobs collection
+                        jData.savedAt = savedAtMap[snap.id] ? savedAtMap[snap.id].toDate() : new Date();
+                        fetchedJobs.push(jData);
+                    }
+                });
+
+                window.allJobs = fetchedJobs;
+                window.render(window.getProcessedJobs());
+            } catch (error) {
+                console.error("Error fetching saved jobs details:", error);
+            }
+        }, (error) => {
+            console.error("Error listening to saved jobs:", error);
+            
+            if(error.message.includes("requires an index")) {
+                const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+                if(linkMatch) {
+                    document.body.innerHTML += `
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color:red; margin-top:0;">Firebase Index Required (Saved Jobs)</h3>
+                        <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                        <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                    </div>`;
+                }
+            }
+        });
+    }
+
+    window.removeJob = async function(jobId) {
+        if (!currentUser) return;
+        const card = document.getElementById('job-card-' + jobId);
+        if (card) card.classList.add('removing');
+
+        try {
+            // Find and delete from the global savedJobs collection
+            const q = query(collection(db, "savedJobs"), where("userId", "==", currentUser.uid), where("jobId", "==", jobId));
+            const querySnapshot = await getDocs(q);
+            
+            querySnapshot.forEach(async (docSnap) => {
+                await deleteDoc(doc(db, "savedJobs", docSnap.id));
+            });
+
+            window.showToast('Job removed from saved list.', 'info');
+            // UI will update automatically via onSnapshot
+        } catch (error) {
+            console.error("Error removing job:", error);
+            window.showToast('Error removing job.', 'error');
+            if (card) card.classList.remove('removing');
+        }
+    };
+
+    // Handle Sign Out
+    document.querySelectorAll('.logout-action').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
+            try {
+                if(savedJobsUnsubscribe) savedJobsUnsubscribe();
+                await signOut(firebaseAuth);
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("Sign out error:", error);
+                window.showToast("Failed to sign out. Please try again.", "error");
+                btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
+            }
+        });
+    });
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+</script>
+</body>
+</html>

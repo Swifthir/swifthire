@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">Master Admin Settings | Swifthire Admin</title>
+  
+  <meta name="description" content="Master Settings - Swifthire Admin">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── SWIFTHIRE VARIABLES ── */
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --shadow-hover: 0 20px 40px rgba(0,0,0,0.08);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow-x: hidden; 
+        padding-bottom: 120px; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: transform 0.3s ease, width 0.3s, left 0.3s; 
+    }
+    header.hidden { transform: translateY(-100%); }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; }
+    
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+    .header-user-info { display:flex; flex-direction:column; text-align:right; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px; background: var(--gradient-blue); 
+        color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; }
+    .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 13px 20px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-right: 4px solid transparent; margin: 0 8px; border-radius: 12px; }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    /* ── LAYOUT & SETTINGS TABS ── */
+    .dashboard-container { margin-top: 80px; padding: 20px; width: 100%; max-width: 900px; margin-left: 0; transition: var(--transition); }
+    
+    .page-header { margin-bottom: 25px; animation: slideUp 0.5s ease-out; }
+    .page-title { font-family: var(--font-serif); font-size: 2.2rem; color: var(--text-dark); margin-bottom: 8px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-subtitle { color: var(--text-grey); font-size: 1rem; font-weight: 500; }
+
+    .tabs-container { 
+        position: sticky; top: 75px; z-index: 900; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(10px); 
+        margin: 0 -20px 25px -20px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; 
+        display: flex; gap: 12px; border-bottom: 1px solid var(--border-grey); transition: top 0.3s ease; 
+    }
+    .tabs-container::-webkit-scrollbar { display: none; }
+    
+    .tab-btn { 
+        padding: 10px 22px; border-radius: 30px; background: var(--white); border: 2px solid var(--border-grey); 
+        color: var(--text-grey); font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-main); 
+    }
+    .tab-btn.active { background: var(--primary-blue); color: var(--white); border-color: var(--primary-blue); box-shadow: 0 4px 10px rgba(0,0,204,0.2); }
+
+    .section { display: none; animation: slideUp 0.3s ease; }
+    .section.active { display: block; }
+
+    /* ── CARDS & FORMS ── */
+    .card { background: var(--white); border-radius: 24px; padding: 30px; margin-bottom: 25px; box-shadow: var(--shadow-card); border: 1px solid var(--border-grey); }
+    .card-header { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--bg-light-grey); display: flex; align-items: center; gap: 12px; }
+    .card-header i { color: var(--primary-blue); background: #EFF6FF; padding: 10px; border-radius: 12px; font-size: 1rem; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .input-field { width: 100%; padding: 14px 18px; border: 2px solid var(--border-grey); border-radius: 12px; font-size: 0.95rem; font-family: inherit; background: #F9FAFB; color: var(--text-dark); outline: none; transition: var(--transition); font-weight: 500; }
+    .input-field:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 4px #EFF6FF; }
+    textarea.input-field { min-height: 100px; resize: vertical; }
+
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--bg-light-grey); }
+    .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .toggle-text h4 { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+    .toggle-text p { font-size: 0.85rem; color: var(--text-grey); font-weight: 500; }
+
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-grey); transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--success-green); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* ── STICKY ACTIONS ── */
+    .sticky-actions { 
+        position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); padding: 15px; border-radius: 50px; 
+        display: flex; gap: 15px; z-index: 998; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid var(--border-grey); transition: transform 0.4s; 
+    }
+    .sticky-actions.hidden { transform: translateX(-50%) translateY(200%); }
+    .btn { flex: 1; padding: 14px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer; font-size: 1rem; font-family: var(--font-main); transition: var(--transition); }
+    .btn-save { background: var(--gradient-blue); color: white; box-shadow: 0 4px 15px rgba(0,0,204,0.2); }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,204,0.3); }
+    .btn-reset { background: transparent; color: var(--text-grey); border: 2px solid var(--border-grey); }
+    .btn-reset:hover { background: var(--bg-light-grey); color: var(--text-dark); }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--success-green); color: white; padding: 12px 24px; border-radius: 50px; font-weight: 800; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 3000; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); }
+    #toast.show { opacity: 1; bottom: 110px; }
+
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .dashboard-container { margin-left: 280px; padding: 30px 40px; max-width: 1000px; }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+        .tabs-container { margin: 0 0 25px 0; padding: 15px 0; background: transparent; backdrop-filter: none; top: 85px; }
+        .sticky-actions { left: calc(50% + 140px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="admin-dashboard.html" style="text-decoration: none;">
+          <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      </a>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="navAvatarInit">A</div>
+      <div>
+        <div class="sidebar-profile-name" id="navName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link"><i class="fas fa-briefcase"></i> Job Management</a>
+      <a href="admin-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> Applications</a>
+      <a href="admin-user-directory.html" class="sidebar-link"><i class="fas fa-users"></i> User Directory</a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link"><i class="fas fa-list-alt"></i> Logs</a>
+      <a href="admin-reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> Reports</a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link"><i class="fas fa-headset"></i> Support</a>
+      <a href="admin-system-settings.html" class="sidebar-link active"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-right">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-container">
+    <div class="page-header">
+        <h1 class="page-title">Platform Settings</h1>
+        <p class="page-subtitle">Configure core system parameters and platform behaviors.</p>
+    </div>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="window.showTab('security', this)">Security</button>
+        <button class="tab-btn" onclick="window.showTab('system', this)">System</button>
+        <button class="tab-btn" onclick="window.showTab('jobs', this)">Jobs</button>
+        <button class="tab-btn" onclick="window.showTab('payments', this)">Payments</button>
+        <button class="tab-btn" onclick="window.showTab('branding', this)">Branding</button>
+        <button class="tab-btn" onclick="window.showTab('support', this)">Contacts</button>
+    </div>
+
+    <form id="settingsForm">
+        <!-- Security -->
+        <div id="security" class="section active">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-lock"></i> Account & Access</div>
+                <div class="toggle-row">
+                    <div class="toggle-text"><h4>Allow Guest Access</h4><p>Public can view job boards without logging in.</p></div>
+                    <label class="switch"><input type="checkbox" id="allowGuest" checked><span class="slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-text"><h4>Require Email Verification</h4><p>Mandatory for all new signups.</p></div>
+                    <label class="switch"><input type="checkbox" id="forceEmailVerification" checked><span class="slider"></span></label>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Session Timeout (Minutes)</label>
+                    <input type="number" id="sessionTimeout" class="input-field" value="60">
+                </div>
+            </div>
+        </div>
+
+        <!-- System -->
+        <div id="system" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-server"></i> Platform Core</div>
+                <div class="form-group">
+                    <label>Environment Mode</label>
+                    <select id="environmentMode" class="input-field" style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%236B7280\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+                        <option value="Production">Production</option>
+                        <option value="Development">Development</option>
+                    </select>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-text"><h4>Open Registrations</h4><p>Allow new users to sign up.</p></div>
+                    <label class="switch"><input type="checkbox" id="registrationOpen" checked><span class="slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-text"><h4>Debug Mode</h4><p>Enable console logs for administrators.</p></div>
+                    <label class="switch"><input type="checkbox" id="debugMode"><span class="slider"></span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jobs -->
+        <div id="jobs" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-briefcase"></i> Job Board Configuration</div>
+                <div class="form-group">
+                    <label>Default Job Expiry (Days)</label>
+                    <input type="number" id="jobExpirationDays" class="input-field" value="30">
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div id="payments" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-wallet"></i> Verification & Fees</div>
+                
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="paymentMode" class="input-field" style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%236B7280\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+                        <option value="buy_goods">M-PESA Buy Goods (Till)</option>
+                        <option value="send_money">M-PESA Send Money</option>
+                        <option value="paybill">M-PESA Paybill</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Payment Target Number</label>
+                    <input type="text" id="tillNumber" class="input-field" placeholder="e.g. 555555" value="123456">
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Featured Tier Fee (KES)</label>
+                        <input type="number" id="feeFeatured" class="input-field" placeholder="300" value="300">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Guaranteed Tier Fee (KES)</label>
+                        <input type="number" id="feeGuaranteed" class="input-field" placeholder="800" value="800">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branding -->
+        <div id="branding" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-paint-brush"></i> Identity & Branding</div>
+                <div class="form-group">
+                    <label>Application Name</label>
+                    <input type="text" id="appName" class="input-field" value="Swifthire">
+                </div>
+                <div class="form-group">
+                    <label>Brand Primary Color (Hex)</label>
+                    <input type="color" id="themePrimary" class="input-field" value="#0000CC" style="height:50px; padding:4px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div id="support" class="section">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-address-book"></i> Public Contacts</div>
+                <div class="form-group">
+                    <label>Support Email Address</label>
+                    <input type="email" id="supportEmail" class="input-field" value="support@swifthire.com">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp Support Number</label>
+                    <input type="tel" id="whatsappNumber" class="input-field" value="+254700000000">
+                </div>
+            </div>
+        </div>
+    </form>
+  </main>
+
+  <!-- Action Bar -->
+  <div class="sticky-actions" id="stickyActions">
+    <button type="button" class="btn btn-reset" onclick="location.reload()">Reset Changes</button>
+    <button type="button" class="btn btn-save" id="saveBtn"><i class="fas fa-save"></i> Save Settings</button>
+  </div>
+
+  <div id="toast"><i class="fas fa-check-circle"></i> Settings Saved Successfully</div>
+
+  <!-- UI SCRIPT -->
+  <script>
+    // ── UI LOGIC ──
+    const menuToggleBtn   = document.getElementById('menuToggleBtn');
+    const sidebar         = document.getElementById('sidebar');
+    const sidebarOverlay  = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('show');
+    }
+    if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+    if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+    if (sidebarOverlay) sidebarOverlay.onclick = toggleSidebar;
+
+    // Tabs
+    window.showTab = function(tabId, btn) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    // Scroll Hide logic for headers & actions
+    let lastY = window.scrollY;
+    const header = document.getElementById('header');
+    const stickyActions = document.getElementById('stickyActions');
+    
+    window.addEventListener('scroll', () => {
+      const currY = window.scrollY;
+      if (Math.abs(currY - lastY) < 10) return;
+      
+      if (currY > lastY && currY > 60) {
+        header.classList.add('hidden');
+        stickyActions.classList.add('hidden');
+      } else {
+        header.classList.remove('hidden');
+        stickyActions.classList.remove('hidden');
+      }
+      lastY = currY;
+    }, { passive: true });
+  </script>
+
+  <!-- FIREBASE SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+      authDomain: "skilllink69-122aa.firebaseapp.com",
+      projectId: "skilllink69-122aa",
+      storageBucket: "skilllink69-122aa.firebasestorage.app",
+      messagingSenderId: "673456146518",
+      appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+      measurementId: "G-H69LL8HKYQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index for real-time listener features:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `Master Settings | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, error => showIndexError(error));
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    // ── FIREBASE AUTH CHECK & LOGOUT ──
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                    const firstName = uDoc.data().firstName || 'Admin';
+                    document.getElementById('navName').textContent = firstName;
+                    document.getElementById('headerName').textContent = firstName;
+                    document.getElementById('navAvatarInit').textContent = firstName.charAt(0).toUpperCase();
+                    
+                    loadAppConfig();
+                    setupRealtimeListeners();
+                } else {
+                    window.location.href = "index.html";
+                }
+            } catch(e) { window.location.href = "index.html"; }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            window.location.href = "index.html";
+        });
+    });
+
+    // ── LOAD SETTINGS FROM FIRESTORE ──
+    const settingsDocRef = doc(db, "settings", "general");
+    const brandingDocRef = doc(db, "settings", "branding");
+    let isInitialLoad = true;
+
+    function setupRealtimeListeners() {
+        // Load General Settings
+        onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (isInitialLoad) {
+                    // Security
+                    document.getElementById('allowGuest').checked = data.allowGuest ?? true;
+                    document.getElementById('forceEmailVerification').checked = data.forceEmailVerification ?? true;
+                    document.getElementById('sessionTimeout').value = data.sessionTimeout ?? 60;
+                    
+                    // System
+                    document.getElementById('environmentMode').value = data.environmentMode ?? 'Production';
+                    document.getElementById('registrationOpen').checked = data.registrationOpen ?? true;
+                    document.getElementById('debugMode').checked = data.debugMode ?? false;
+                    
+                    // Jobs
+                    document.getElementById('jobExpirationDays').value = data.jobExpirationDays ?? 30;
+                    
+                    // Payments
+                    document.getElementById('paymentMode').value = data.paymentMode ?? 'buy_goods';
+                    document.getElementById('tillNumber').value = data.tillNumber ?? '123456';
+                    document.getElementById('feeFeatured').value = data.feeFeatured ?? 300;
+                    document.getElementById('feeGuaranteed').value = data.feeGuaranteed ?? 800;
+                    
+                    // Support
+                    document.getElementById('supportEmail').value = data.supportEmail ?? 'support@swifthire.com';
+                    document.getElementById('whatsappNumber').value = data.whatsappNumber ?? '+254700000000';
+                }
+            }
+        }, error => showIndexError(error));
+
+        // Load Branding Settings
+        onSnapshot(brandingDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (isInitialLoad) {
+                    // Branding inputs
+                    document.getElementById('appName').value = data.appName ?? 'Swifthire';
+                    document.getElementById('themePrimary').value = data.primaryColor ?? '#0000CC';
+                    
+                    isInitialLoad = false;
+                }
+            }
+        }, error => showIndexError(error));
+    }
+
+    // ── SAVE SETTINGS TO FIRESTORE ──
+    document.getElementById('saveBtn').addEventListener('click', async function() {
+        const btn = this;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+
+        const generalData = {
+            allowGuest: document.getElementById('allowGuest').checked,
+            forceEmailVerification: document.getElementById('forceEmailVerification').checked,
+            sessionTimeout: parseInt(document.getElementById('sessionTimeout').value) || 60,
+            
+            environmentMode: document.getElementById('environmentMode').value,
+            registrationOpen: document.getElementById('registrationOpen').checked,
+            debugMode: document.getElementById('debugMode').checked,
+            
+            jobExpirationDays: parseInt(document.getElementById('jobExpirationDays').value) || 30,
+            
+            paymentMode: document.getElementById('paymentMode').value,
+            tillNumber: document.getElementById('tillNumber').value,
+            feeFeatured: parseInt(document.getElementById('feeFeatured').value) || 300,
+            feeGuaranteed: parseInt(document.getElementById('feeGuaranteed').value) || 800,
+            
+            supportEmail: document.getElementById('supportEmail').value,
+            whatsappNumber: document.getElementById('whatsappNumber').value,
+            
+            updatedAt: serverTimestamp()
+        };
+
+        const brandingData = {
+            appName: document.getElementById('appName').value,
+            primaryColor: document.getElementById('themePrimary').value,
+            updatedAt: serverTimestamp()
+        };
+
+        try {
+            await setDoc(settingsDocRef, generalData, { merge: true });
+            await setDoc(brandingDocRef, brandingData, { merge: true });
+            
+            const t = document.getElementById('toast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        } catch (error) {
+            console.error("Error saving settings: ", error);
+            alert("Failed to save settings. Check console for details.");
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Settings';
+            btn.disabled = false;
+        }
+    });
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

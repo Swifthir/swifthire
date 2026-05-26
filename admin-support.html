@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title id="pageTitleHead">Support Tickets | Swifthire Admin</title>
+  
+  <meta name="description" content="Support Tickets - Swifthire Admin">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── SWIFTHIRE VARIABLES ── */
+    :root { 
+        --primary-blue: #0000CC; 
+        --bright-blue: #3b5bfb; 
+        --gradient-blue: linear-gradient(135deg, var(--primary-blue), var(--bright-blue)); 
+        --success-green: #10B981; 
+        --danger-red: #EF4444; 
+        --danger-bg: #FEE2E2; 
+        --warning-bg: #FEF3C7; 
+        --text-grey: #6B7280; 
+        --text-dark: #1F2937; 
+        --border-grey: #E5E7EB; 
+        --bg-light-grey: #F9FAFB; 
+        --white: #FFFFFF; 
+        --font-main: 'Plus Jakarta Sans', sans-serif; 
+        --font-serif: 'Playfair Display', serif; 
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        --shadow-card: 0 10px 25px rgba(0,0,0,0.05); 
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: var(--font-main); 
+        color: var(--text-grey); 
+        background-color: #F8FAFC; 
+        background-image: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                          radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%); 
+        background-attachment: fixed; 
+        height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden; 
+    }
+
+    /* ── HEADER ── */
+    header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); 
+        padding: 15px 20px; position: fixed; top: 0; left: 0; right: 0; height: 75px;
+        z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        transition: width 0.3s, left 0.3s; 
+    }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+    .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+    .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; display: block; padding: 5px; z-index: 1001; }
+    
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .logout-btn { 
+        background: var(--bg-light-grey); color: var(--text-grey); 
+        border: 1px solid var(--border-grey); padding: 8px 16px; 
+        border-radius: 30px; font-size: 0.85rem; cursor: pointer; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; transition: var(--transition); 
+    }
+    .logout-btn:hover { background: var(--danger-bg); color: var(--danger-red); border-color: var(--danger-bg); }
+    .header-user-info { display:flex; flex-direction:column; text-align:right; }
+    .header-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+    .header-user-role { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; width: 280px; height: 100vh; 
+        background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.05); 
+        z-index: 2000; transform: translateX(-100%); transition: transform 0.3s ease; 
+        display: flex; flex-direction: column; overflow-y: auto; 
+        border-right: 1px solid var(--border-grey); 
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar-header { 
+        padding: 25px 20px; display: flex; justify-content: space-between; 
+        align-items: center; border-bottom: 1px solid var(--bg-light-grey); 
+    }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+    .close-sidebar { 
+        background: var(--bg-light-grey); border: none; width: 36px; height: 36px; 
+        border-radius: 50%; color: var(--text-dark); cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+    }
+    .sidebar-profile { 
+        margin: 20px 15px 5px; padding: 16px; 
+        background: linear-gradient(135deg, #EFF6FF, #F3E8FF); 
+        border-radius: 16px; border: 1px solid #BFDBFE; 
+        display: flex; align-items: center; gap: 12px; 
+    }
+    .sidebar-profile-avatar { 
+        width: 46px; height: 46px; background: var(--gradient-blue); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        color: white; font-weight: 800; font-size: 1rem; 
+        box-shadow: 0 4px 10px rgba(0,0,204,0.25); flex-shrink: 0; 
+    }
+    .sidebar-profile-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
+    .sidebar-profile-badge { 
+        display: inline-flex; align-items: center; gap: 4px; background: var(--gradient-blue); 
+        color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; 
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; 
+    }
+    .sidebar-nav { display: flex; flex-direction: column; padding: 16px 0; gap: 3px; text-align: left; }
+    .sidebar-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #9CA3AF; margin: 12px 0 4px 20px; font-weight: 800; }
+    .sidebar-link { display: flex; align-items: center; gap: 14px; padding: 13px 20px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); border-right: 4px solid transparent; margin: 0 8px; border-radius: 12px; }
+    .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+    .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+    .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    /* ── LAYOUT ── */
+    .support-container {
+        display: flex; margin-top: 75px; height: calc(100vh - 75px); width: 100%; transition: var(--transition);
+    }
+
+    /* Left Pane: Ticket List */
+    .ticket-list-col { 
+        width: 380px; background: var(--white); border-right: 1px solid var(--border-grey); 
+        display: flex; flex-direction: column; z-index: 5; flex-shrink: 0;
+    }
+    .list-header { padding: 25px 20px 20px; border-bottom: 1px solid var(--border-grey); background: var(--white); }
+    .list-title { font-weight: 800; font-size: 1.3rem; color: var(--text-dark); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-family: var(--font-serif); }
+    .unread-badge-counter { background: var(--danger-red); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: 800; display: none; }
+
+    .filter-tabs { display: flex; gap: 8px; background: var(--bg-light-grey); padding: 6px; border-radius: 12px; border: 1px solid var(--border-grey); }
+    .filter-tab { flex: 1; padding: 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; background: transparent; color: var(--text-grey); border: none; cursor: pointer; transition: 0.2s;}
+    .filter-tab.active { background: var(--white); color: var(--primary-blue); box-shadow: var(--shadow-sm); }
+
+    .ticket-list { flex: 1; overflow-y: auto; padding-bottom: 25px; }
+    .ticket-item { padding: 20px; border-bottom: 1px solid var(--bg-light-grey); cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 6px; transition: var(--transition); border-left: 4px solid transparent;}
+    .ticket-item:hover { background: var(--bg-light-grey); }
+    .ticket-item.active { background: #EFF6FF; border-left-color: var(--primary-blue); }
+    .ticket-item.unread .t-subject { font-weight: 800; color: var(--text-dark); }
+    .ticket-item.unread::after { content: ''; position: absolute; right: 20px; top: 25px; width: 10px; height: 10px; background: var(--danger-red); border-radius: 50%; box-shadow: 0 0 0 3px var(--danger-bg); }
+    
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .dot-open { background: var(--success-green); box-shadow: 0 0 0 3px #ECFDF5; } 
+    .dot-closed { background: #cbd5e1; }
+    
+    .t-subject { font-weight: 700; font-size: 0.95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: space-between;}
+    .t-snippet { font-size: 0.85rem; color: var(--text-grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px; font-weight: 500; }
+    .t-meta { font-size: 0.8rem; color: var(--text-grey); display: flex; justify-content: space-between; margin-top: 6px; font-weight: 600;}
+    .t-code { font-size: 0.7rem; background: #EFF6FF; color: var(--primary-blue); padding: 4px 8px; border-radius: 6px; font-weight: 800;}
+    .t-type-badge { font-size: 0.65rem; background: #E5E7EB; color: #374151; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 800; }
+    .t-type-help { background: #E0E7FF; color: #4338CA; }
+    .t-type-contact { background: #FEF3C7; color: #B45309; }
+
+    /* Right Pane: Chat Area */
+    .chat-pane-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-grey); text-align: center; }
+    .chat-view { display: none; flex-direction: column; height: 100%; background: transparent; }
+    .chat-view.active { display: flex; }
+
+    .view-header { padding: 20px 30px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-grey); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .user-info h3 { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 10px; margin-bottom: 4px;}
+    .btn-resolve { background: var(--white); border: 2px solid var(--border-grey); padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; color: var(--text-dark); transition: var(--transition); font-family: var(--font-main); font-size: 0.9rem;}
+    .btn-resolve:hover { background: #EFF6FF; color: var(--primary-blue); border-color: var(--bright-blue); }
+    .btn-resolve.is-resolved { background: #ECFDF5; color: var(--success-green); border-color: #A7F3D0; }
+
+    .chat-history { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+    .msg-bubble { max-width: 75%; padding: 16px 20px; border-radius: 20px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; font-weight: 500; }
+    .bubble-admin { align-self: flex-end; background: var(--gradient-blue); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,204,0.15);}
+    .bubble-user { align-self: flex-start; background: var(--white); color: var(--text-dark); border-bottom-left-radius: 4px; border: 1px solid var(--border-grey); box-shadow: var(--shadow-sm); }
+    .msg-time { font-size: 0.75rem; margin-top: 8px; opacity: 0.8; display: block; font-weight: 600; text-align: right;}
+    .bubble-user .msg-time { color: #9CA3AF; }
+    
+    .input-box { background: var(--white); padding: 20px 30px; border-top: 1px solid var(--border-grey); display: flex; gap: 15px; align-items: center; }
+    .chat-input { flex: 1; padding: 16px 24px; border: 2px solid var(--border-grey); border-radius: 50px; outline: none; transition: 0.3s; font-family: inherit; font-size: 0.95rem; background: #F9FAFB; font-weight: 500;}
+    .chat-input:focus { border-color: var(--bright-blue); background: var(--white); box-shadow: 0 0 0 4px #EFF6FF; }
+    .send-btn { width: 54px; height: 54px; border-radius: 50%; background: var(--gradient-blue); color: white; border: none; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,204,0.2);}
+    .send-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,204,0.3); }
+    
+    .resolved-banner { background: #FEF3C7; color: #B45309; text-align: center; padding: 15px; font-weight: 700; display: none; border-top: 1px solid var(--border-grey); font-size: 0.9rem;}
+    .back-btn { display: none; cursor: pointer; color: var(--primary-blue); font-size: 1.4rem; margin-right: 15px; padding: 5px; }
+
+    /* ── TOAST NOTIFICATION ── */
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: var(--white); border-left: 4px solid var(--primary-blue); box-shadow: var(--shadow-hover); padding: 16px 20px; border-radius: 12px; display: flex; align-items: center; gap: 16px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-width: 280px; border: 1px solid var(--border-grey); border-left: 4px solid var(--primary-blue);}
+    .toast.show { transform: translateX(0); }
+    .toast-icon { color: var(--primary-blue); font-size: 1.5rem; background: #EFF6FF; padding: 10px; border-radius: 10px; }
+    .toast-content h4 { font-size: 0.95rem; color: var(--text-dark); margin-bottom: 4px; font-weight: 800;}
+    .toast-content p { font-size: 0.85rem; color: var(--text-grey); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; font-weight: 500;}
+
+    /* ── RESPONSIVE ── */
+    @media (min-width: 1024px) {
+        .menu-toggle-btn { display: none; }
+        .sidebar { transform: translateX(0); }
+        header { left: 280px; width: calc(100% - 280px); padding: 15px 40px; }
+        .support-container { margin-left: 280px; width: calc(100% - 280px); }
+        .sidebar-header .close-sidebar { display: none; }
+        .sidebar-overlay { display: none !important; }
+        header .logo-container { display: none; }
+    }
+    @media (max-width: 1023px) {
+        .ticket-list-col { width: 100%; }
+        .chat-pane-col { position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; background: #F8FAFC;}
+        .chat-pane-col.mobile-show { transform: translateX(0); }
+        .back-btn { display: block; }
+        .toast-container { right: 10px; left: 10px; bottom: 10px; }
+        .toast { min-width: unset; width: 100%; }
+        .toast-content p { max-width: 70vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="admin-dashboard.html" style="text-decoration: none;">
+          <span class="sidebar-brand" id="sidebarBrandName">Swifthire</span>
+      </a>
+      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-profile-avatar" id="navAvatarInit">A</div>
+      <div>
+        <div class="sidebar-profile-name" id="navName">Admin User</div>
+        <span class="sidebar-profile-badge"><i class="fas fa-shield-alt" style="font-size:0.6rem;"></i> Super Admin</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <a href="admin-profile.html" class="sidebar-link"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="admin-dashboard.html" class="sidebar-link"><i class="fas fa-th-large"></i> Dashboard</a>
+      
+      <div class="sidebar-section-title">Management</div>
+      <a href="admin-job-management.html" class="sidebar-link"><i class="fas fa-briefcase"></i> Job Management</a>
+      <a href="admin-applications.html" class="sidebar-link"><i class="fas fa-folder-open"></i> Applications</a>
+      <a href="admin-user-directory.html" class="sidebar-link"><i class="fas fa-users"></i> User Directory</a>
+      
+      <div class="sidebar-section-title">System & Analytics</div>
+      <a href="admin-logs.html" class="sidebar-link"><i class="fas fa-list-alt"></i> Logs</a>
+      <a href="admin-reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> Reports</a>
+
+      <div class="sidebar-section-title">Help & Config</div>
+      <a href="admin-support.html" class="sidebar-link active"><i class="fas fa-headset"></i> Support</a>
+      <a href="admin-system-settings.html" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+      <a href="admin-dashboard.html" class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+            <circle cx="62" cy="24" r="10" fill="#000000"/>
+            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-text" id="headerAppName">Swifthire</span>
+      </a>
+    </div>
+    <div class="header-right">
+      <div class="header-user-info">
+        <span class="header-user-name" id="headerName">Admin User</span>
+        <span class="header-user-role">Super Admin</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="support-container">
+      
+      <!-- Ticket List (Left Pane) -->
+      <div class="ticket-list-col">
+          <div class="list-header">
+              <div class="list-title">System Support <span id="unreadCounter" class="unread-badge-counter">0 New</span></div>
+              <div class="filter-tabs" id="filterTabs">
+                  <button class="filter-tab active" data-filter="all">All</button>
+                  <button class="filter-tab" data-filter="open">Open</button>
+                  <button class="filter-tab" data-filter="closed">Closed</button>
+              </div>
+          </div>
+          <div id="ticketList" class="ticket-list">
+              <div style="padding:40px;text-align:center;color:var(--text-grey); font-weight:600;"><i class="fas fa-spinner fa-spin"></i> Loading Tickets...</div>
+          </div>
+      </div>
+
+      <!-- Chat Area (Right Pane) -->
+      <div class="chat-pane-col" id="chatPane">
+          <div id="emptyState" class="empty-state">
+              <div style="width:80px;height:80px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                  <i class="fas fa-comments" style="font-size:2.5rem; color:var(--primary-blue);"></i>
+              </div>
+              <h3 style="font-family:var(--font-serif); font-size:1.6rem; color:var(--text-dark); margin-bottom:8px;">Select a Ticket</h3>
+              <p style="font-size:0.95rem; font-weight:500;">Choose a conversation from the left to start replying.</p>
+          </div>
+
+          <div id="chatView" class="chat-view">
+              <div class="view-header">
+                  <div style="display:flex; align-items:center;">
+                      <span class="back-btn" id="mobileBackBtn"><i class="fas fa-arrow-left"></i></span>
+                      <div class="user-info">
+                          <h3 id="displaySubject">Ticket Subject</h3>
+                          <span id="displayUser" style="font-size:0.85rem;color:var(--text-grey); font-weight:600;">user@example.com</span>
+                      </div>
+                  </div>
+                  <button class="btn-resolve" id="resolveBtn"><i class="fas fa-check-circle"></i> Mark Resolved</button>
+              </div>
+
+              <div class="chat-history" id="chatHistory"></div>
+              
+              <div class="resolved-banner" id="resolvedBanner">
+                  <i class="fas fa-lock" style="margin-right:5px;"></i> This ticket is closed. It must be reopened to continue the conversation.
+              </div>
+
+              <div class="input-box" id="inputBox">
+                  <input type="text" id="replyInput" class="chat-input" placeholder="Type your reply to the user...">
+                  <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+              </div>
+          </div>
+      </div>
+
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts & Firebase Configuration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, addDoc, serverTimestamp, collectionGroup } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+      authDomain: "skilllink69-122aa.firebaseapp.com",
+      projectId: "skilllink69-122aa",
+      storageBucket: "skilllink69-122aa.firebasestorage.app",
+      messagingSenderId: "673456146518",
+      appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+      measurementId: "G-H69LL8HKYQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Error Handler for Indexes ---
+    function showIndexError(error) {
+        if(error.message && error.message.includes("requires an index")) {
+            const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+            if(linkMatch) {
+                document.body.innerHTML += `
+                <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                    <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index for real-time listener features:</p>
+                    <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                </div>`;
+            }
+        }
+    }
+
+    // ── UI LOGIC ──
+    const menuToggleBtn   = document.getElementById('menuToggleBtn');
+    const sidebar         = document.getElementById('sidebar');
+    const sidebarOverlay  = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('show');
+    }
+    if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+    if (closeSidebarBtn) closeSidebarBtn.onclick = toggleSidebar;
+    if (sidebarOverlay) sidebarOverlay.onclick = toggleSidebar;
+
+    // --- Configuration Listener (Branding) ---
+    function loadAppConfig() {
+        if (!db) return;
+        try {
+            const brandRef = doc(db, "settings", "branding");
+            onSnapshot(brandRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const appName = data.appName || 'Swifthire';
+                    
+                    const pageTitleHead = document.getElementById('pageTitleHead');
+                    const headerAppName = document.getElementById('headerAppName');
+                    const sidebarBrandName = document.getElementById('sidebarBrandName');
+                    
+                    if(pageTitleHead) pageTitleHead.textContent = `Support Tickets | ${appName}`;
+                    if(headerAppName) headerAppName.textContent = appName;
+                    if(sidebarBrandName) sidebarBrandName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-blue', data.primaryColor);
+                        document.documentElement.style.setProperty('--gradient-blue', `linear-gradient(135deg, ${data.primaryColor}, var(--bright-blue))`);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            }, error => showIndexError(error));
+        } catch (error) { 
+            console.warn("Failed to set up listeners for configuration.", error); 
+        }
+    }
+
+    // ── FIREBASE AUTH CHECK & LOGOUT ──
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && ['admin','superadmin'].includes(uDoc.data().role)) {
+                    const firstName = uDoc.data().firstName || 'Admin';
+                    document.getElementById('navName').textContent = firstName;
+                    document.getElementById('headerName').textContent = firstName;
+                    document.getElementById('navAvatarInit').textContent = firstName.charAt(0).toUpperCase();
+                    
+                    loadAppConfig();
+                    setupRealtimeListeners(); 
+                } else {
+                    window.location.href = "index.html";
+                }
+            } catch(e) { window.location.href = "index.html"; }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            window.location.href = "index.html";
+        });
+    });
+
+    // ── SUPPORT LOGIC (Firestore Integration) ──
+    const ticketListEl = document.getElementById('ticketList');
+    const chatHistoryEl = document.getElementById('chatHistory');
+    const emptyState = document.getElementById('emptyState');
+    const chatView = document.getElementById('chatView');
+    const chatPane = document.getElementById('chatPane');
+    
+    let allTickets = [];
+    let ticketsData = {}; // To store combined data
+    let currentTicketId = null;
+    let currentFilter = 'all';
+    let messagesUnsubscribe = null;
+
+    function showToast(title, message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast show';
+        toast.innerHTML = `
+            <div class="toast-icon"><i class="fas fa-bell"></i></div>
+            <div class="toast-content">
+                <h4>${title}</h4>
+                <p>${message}</p>
+            </div>
+        `;
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 5000);
+    }
+
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.getAttribute('data-filter');
+            renderTickets();
+        });
+    });
+
+    document.getElementById('mobileBackBtn').addEventListener('click', () => { 
+        chatPane.classList.remove('mobile-show'); 
+        currentTicketId = null;
+        if (messagesUnsubscribe) {
+            messagesUnsubscribe();
+            messagesUnsubscribe = null;
+        }
+        renderTickets();
+    });
+
+    // Listen to both collections: supportTickets and help_chats (via collectionGroup)
+    function setupRealtimeListeners() {
+        // 1. Listen to traditional Support Tickets
+        const qTickets = query(collection(db, "supportTickets"), orderBy("updatedAt", "desc"));
+        onSnapshot(qTickets, (snapshot) => {
+            snapshot.forEach(doc => {
+                ticketsData[doc.id] = { id: doc.id, msgSourceType: 'support', ...doc.data() };
+            });
+            mergeAndRender();
+        }, (error) => {
+            console.error("Error fetching support tickets:", error);
+            showIndexError(error);
+        });
+
+        // 2. Listen to Virtual Assistant Help Chats
+        const qHelp = query(collectionGroup(db, "help_chats"), orderBy("updatedAt", "desc"));
+        onSnapshot(qHelp, (snapshot) => {
+            snapshot.forEach(doc => {
+                ticketsData[doc.id] = { 
+                    id: doc.id, 
+                    msgSourceType: 'help', 
+                    path: doc.ref.path, 
+                    ...doc.data() 
+                };
+            });
+            mergeAndRender();
+        }, (error) => {
+            console.error("Error fetching help chats:", error);
+            showIndexError(error);
+        });
+    }
+
+    function mergeAndRender() {
+        allTickets = Object.values(ticketsData).sort((a, b) => {
+            const timeA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
+            const timeB = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
+            return timeB - timeA;
+        });
+
+        updateUnreadBadge();
+        renderTickets();
+        
+        if (currentTicketId) {
+            const updatedTicket = allTickets.find(t => t.id === currentTicketId);
+            if (updatedTicket) updateTicketHeader(updatedTicket);
+        }
+    }
+
+    function updateUnreadBadge() {
+        const unreadCount = allTickets.filter(t => t.hasUnreadAdmin && t.status !== 'closed').length;
+        const badge = document.getElementById('unreadCounter');
+        if(unreadCount > 0) { 
+            badge.textContent = `${unreadCount} New`; 
+            badge.style.display = 'inline-block'; 
+        } else { 
+            badge.style.display = 'none'; 
+        }
+    }
+
+    function renderTickets() {
+        ticketListEl.innerHTML = '';
+        
+        const filtered = allTickets.filter(t => 
+            currentFilter === 'all' || 
+            (currentFilter === 'open' && t.status !== 'closed') || 
+            (currentFilter === 'closed' && t.status === 'closed')
+        );
+
+        if(!filtered.length) {
+            ticketListEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-grey); font-weight:600;">No conversations found.</div>';
+            return;
+        }
+
+        filtered.forEach(t => {
+            const isUnread = t.hasUnreadAdmin && t.status !== 'closed';
+            const div = document.createElement('div');
+            div.className = `ticket-item ${isUnread ? 'unread' : ''} ${currentTicketId === t.id ? 'active' : ''}`;
+            
+            let timeStr = '';
+            if (t.updatedAt) {
+                const date = t.updatedAt.toDate ? t.updatedAt.toDate() : new Date(t.updatedAt);
+                const now = new Date();
+                const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                timeStr = isToday ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : date.toLocaleDateString();
+            }
+
+            const badgeClass = t.msgSourceType === 'help' ? 't-type-help' : 't-type-contact';
+            const badgeLabel = t.msgSourceType === 'help' ? 'Help Chat' : 'Contact';
+
+            div.innerHTML = `
+                <div class="t-subject">
+                    <span style="display:flex; align-items:center;">
+                        <span class="status-dot ${t.status==='closed'?'dot-closed':'dot-open'}"></span>
+                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">${t.subject || 'Conversation'}</span>
+                        <span class="t-type-badge ${badgeClass}">${badgeLabel}</span>
+                    </span>
+                    <span class="t-code">#${t.id.slice(-4).toUpperCase()}</span>
+                </div>
+                <div class="t-snippet">${t.lastMessage || 'No messages yet...'}</div>
+                <div class="t-meta"><span>${t.userEmail || 'User'}</span><span>${timeStr}</span></div>
+            `;
+            div.onclick = () => window.selectTicket(t.id);
+            ticketListEl.appendChild(div);
+        });
+    }
+
+    window.selectTicket = async function(id) {
+        currentTicketId = id;
+        
+        chatPane.classList.add('mobile-show');
+        emptyState.style.display = 'none';
+        chatView.classList.add('active');
+
+        const t = allTickets.find(x => x.id === id);
+        if(!t) return;
+
+        // Mark read in Firestore dynamically based on type
+        if(t.hasUnreadAdmin) {
+            try {
+                const docRef = t.msgSourceType === 'help' ? doc(db, t.path) : doc(db, "supportTickets", id);
+                await updateDoc(docRef, { hasUnreadAdmin: false });
+            } catch (e) {
+                console.error("Error marking as read", e);
+            }
+        }
+
+        updateTicketHeader(t);
+
+        // Load messages dynamically based on type
+        if (messagesUnsubscribe) messagesUnsubscribe();
+        
+        const msgCol = t.msgSourceType === 'help' ? collection(db, t.path, "messages") : collection(db, "supportTickets", id, "messages");
+        const msgQuery = query(msgCol, orderBy("createdAt", "asc"));
+        
+        messagesUnsubscribe = onSnapshot(msgQuery, (snapshot) => {
+            chatHistoryEl.innerHTML = '';
+            
+            if (snapshot.empty) {
+                chatHistoryEl.innerHTML = '<div style="text-align:center; color:var(--text-grey); padding:20px;">No messages yet.</div>';
+                return;
+            }
+
+            snapshot.forEach(msgDoc => {
+                const msg = msgDoc.data();
+                // Both structures generally use 'user' or compare IDs to distinguish admin vs user
+                const isUser = msg.sender === 'user' || msg.role === 'user';
+                const timeStr = msg.createdAt ? (msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                
+                const d = document.createElement('div');
+                d.className = `msg-bubble ${isUser ? 'bubble-user' : 'bubble-admin'}`;
+                d.innerHTML = `${msg.text} <span class="msg-time">${timeStr}</span>`;
+                chatHistoryEl.appendChild(d);
+            });
+            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        }, (error) => {
+            console.error("Error loading messages:", error);
+            chatHistoryEl.innerHTML = '<div style="text-align:center; color:var(--danger-red); padding:20px;">Failed to load messages.</div>';
+            showIndexError(error);
+        });
+    }
+
+    function updateTicketHeader(t) {
+        document.getElementById('displaySubject').innerHTML = `${t.subject || 'Conversation'} <span class="t-code" style="font-size:0.75rem; margin-left:8px;">#${t.id.slice(-4).toUpperCase()}</span>`;
+        document.getElementById('displayUser').textContent = t.userEmail || 'User';
+
+        const resBtn = document.getElementById('resolveBtn');
+        if(t.status === 'closed') {
+            resBtn.innerHTML = '<i class="fas fa-undo"></i> Re-open Ticket'; 
+            resBtn.classList.add('is-resolved');
+            document.getElementById('resolvedBanner').style.display = 'block'; 
+            document.getElementById('inputBox').style.display = 'none';
+        } else {
+            resBtn.innerHTML = '<i class="fas fa-check-circle"></i> Mark Resolved'; 
+            resBtn.classList.remove('is-resolved');
+            document.getElementById('resolvedBanner').style.display = 'none'; 
+            document.getElementById('inputBox').style.display = 'flex';
+        }
+    }
+
+    document.getElementById('sendBtn').onclick = async () => {
+        const val = document.getElementById('replyInput').value.trim();
+        if(!val || !currentTicketId) return;
+        
+        const t = allTickets.find(x => x.id === currentTicketId);
+        if(!t) return;
+
+        document.getElementById('replyInput').value = '';
+        
+        try {
+            const msgCol = t.msgSourceType === 'help' ? collection(db, t.path, "messages") : collection(db, "supportTickets", currentTicketId, "messages");
+            await addDoc(msgCol, {
+                text: val,
+                sender: 'admin',
+                role: 'admin',
+                createdAt: serverTimestamp()
+            });
+            
+            const docRef = t.msgSourceType === 'help' ? doc(db, t.path) : doc(db, "supportTickets", currentTicketId);
+            await updateDoc(docRef, {
+                lastMessage: val,
+                updatedAt: serverTimestamp(),
+                hasUnreadUser: true
+            });
+        } catch (e) {
+            console.error("Error sending message", e);
+            showToast("Error", "Failed to send message.");
+        }
+    };
+
+    document.getElementById('replyInput').onkeypress = (e) => { 
+        if(e.key === 'Enter') document.getElementById('sendBtn').click(); 
+    };
+
+    document.getElementById('resolveBtn').onclick = async () => {
+        if(!currentTicketId) return;
+        const t = allTickets.find(x => x.id === currentTicketId);
+        if(!t) return;
+
+        const newStatus = t.status === 'closed' ? 'open' : 'closed';
+        try {
+            const docRef = t.msgSourceType === 'help' ? doc(db, t.path) : doc(db, "supportTickets", currentTicketId);
+            await updateDoc(docRef, { 
+                status: newStatus,
+                updatedAt: serverTimestamp()
+            });
+            showToast("Success", `Conversation marked as ${newStatus}.`);
+        } catch (e) {
+            console.error("Error updating status", e);
+            showToast("Error", "Failed to update status.");
+        }
+    };
+
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+  </script>
+</body>
+</html>

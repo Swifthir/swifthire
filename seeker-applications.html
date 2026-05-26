@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Applications | Swifthire</title>
+
+    <!-- PWA Meta -->
+    <meta name="description" content="Track your job applications and statuses on Swifthire.">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swifthire">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <!-- PDF Lib -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* ── DESIGN TOKENS ────────────────────────────────────────── */
+        :root {
+            --primary-blue:   #0000CC;
+            --bright-blue:    #3b5bfb;
+            --gradient-blue:  linear-gradient(135deg,#0000CC,#3b5bfb);
+            --success-green:  #10B981;
+            --dark-green:     #047857;
+            --warning-orange: #F59E0B;
+            --danger-red:     #EF4444;
+            --danger-bg:      #FEE2E2;
+            --warning-bg:     #FEF3C7;
+            --text-grey:      #6B7280;
+            --text-dark:      #1F2937;
+            --border-grey:    #E5E7EB;
+            --bg-light-grey:  #F9FAFB;
+            --white:          #FFFFFF;
+            --font-main:      'Plus Jakarta Sans', sans-serif;
+            --font-serif:     'Playfair Display', serif;
+            --shadow-card:    0 10px 25px rgba(0,0,0,.05);
+            --shadow-elevated:0 15px 35px rgba(0,0,204,.08);
+            --transition:     all .3s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* ── RESET ────────────────────────────────────────────────── */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-grey);
+            background-color: #F8FAFC;
+            background-image:
+                radial-gradient(at 0% 0%,   hsla(210,100%,95%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(160,100%,95%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+        /* ── HEADER ───────────────────────────────────────────────── */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,.03);
+            transition: transform .3s ease;
+        }
+        header.hidden { transform: translateY(-100%); }
+
+        .header-left  { display: flex; align-items: center; gap: 15px; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; }
+        .logo-text { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; }
+
+        /* FIXED: Changed display from 'none' to 'block' so it shows on mobile */
+        .menu-toggle-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-dark); cursor: pointer; padding: 5px; z-index: 1001; display: block; }
+
+        .header-icon-btn {
+            background: var(--bg-light-grey); color: var(--text-grey); border: 1px solid var(--border-grey);
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; cursor: pointer; text-decoration: none; transition: var(--transition); position: relative;
+        }
+        .header-icon-btn:hover { background: #EFF6FF; color: var(--primary-blue); border-color: #BFDBFE; }
+        .header-notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger-red); border-radius: 50%; border: 2px solid var(--white); display: none; }
+
+        .header-avatar-btn {
+            display: flex; align-items: center; gap: 8px; background: var(--bg-light-grey); border: 1px solid var(--border-grey);
+            padding: 6px 14px; border-radius: 30px; cursor: pointer; font-weight: 700; font-size: .9rem; color: var(--text-dark); transition: var(--transition);
+        }
+        .header-avatar-btn:hover { background: #EFF6FF; border-color: var(--bright-blue); color: var(--primary-blue); }
+        .header-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--gradient-blue); color: #fff; font-size: .75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+        /* ── SIDEBAR ──────────────────────────────────────────────── */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1999; opacity: 0; pointer-events: none; transition: .3s; }
+        .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--white);
+            box-shadow: 2px 0 15px rgba(0,0,0,.05); z-index: 2000; transform: translateX(-100%);
+            transition: transform .3s ease; display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-grey);
+        }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-grey); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .sidebar-logo-icon { width: 36px; height: 36px; }
+        .sidebar-brand { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 800; color: var(--primary-blue); }
+        .close-sidebar { background: var(--bg-light-grey); border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: .2s; }
+        .close-sidebar:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 20px; border-bottom: 1px solid var(--border-grey); background: var(--bg-light-grey); }
+        .sidebar-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--gradient-blue); color: #fff; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-name { font-weight: 800; font-size: .95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: .78rem; color: var(--text-grey); font-weight: 500; }
+        .sidebar-user-badge { background: var(--warning-bg); color: #92400e; font-size: .7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; }
+
+        .sidebar-nav { display: flex; flex-direction: column; padding: 15px 0; gap: 3px; flex: 1; }
+        .sidebar-section-label { font-size: .7rem; font-weight: 800; letter-spacing: .08em; color: #9CA3AF; text-transform: uppercase; padding: 10px 25px 4px; }
+        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 14px 25px; color: var(--text-grey); text-decoration: none; font-weight: 600; font-size: .95rem; transition: var(--transition); border-right: 4px solid transparent; position: relative; }
+        .sidebar-link:hover { background: var(--bg-light-grey); color: var(--primary-blue); }
+        .sidebar-link.active { color: var(--primary-blue); background: #EFF6FF; border-right-color: var(--bright-blue); }
+        .sidebar-link i { font-size: 1.1rem; width: 24px; text-align: center; }
+        .sidebar-badge { margin-left: auto; background: var(--gradient-blue); color: var(--white); font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
+
+        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-grey); }
+        .sidebar-logout { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-red); border: none; cursor: pointer; font-weight: 700; font-size: .9rem; font-family: var(--font-main); transition: var(--transition); }
+        .sidebar-logout:hover { background: var(--danger-red); color: #fff; }
+
+        /* ── MAIN CONTAINER ───────────────────────────────────────── */
+        .dashboard-container {
+            margin-top: 85px; padding: 20px 5% 40px; max-width: 1000px;
+            margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        .welcome-section { margin-bottom: 30px; }
+        .welcome-title { font-family: var(--font-serif); font-size: 2rem; color: var(--primary-blue); margin-bottom: 5px; }
+        .welcome-subtitle { color: var(--text-grey); font-size: .95rem; font-weight: 500; }
+
+        /* ── APPLICATION CARDS ────────────────────────────────────── */
+        .app-list { display: flex; flex-direction: column; gap: 20px; }
+
+        .app-card {
+            background: var(--white); border-radius: 20px; padding: 24px;
+            display: flex; gap: 20px; box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-grey); border-bottom: 4px solid var(--border-grey);
+            transition: var(--transition); cursor: pointer; position: relative;
+        }
+        .app-card:hover {
+            border-bottom-color: var(--bright-blue); transform: translateY(-3px);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .app-card-logo {
+            width: 60px; height: 60px; background: var(--bg-light-grey); border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); flex-shrink: 0;
+        }
+
+        .app-card-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+        .ac-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ac-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+        .ac-company { font-size: .9rem; color: var(--text-grey); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        
+        .ac-date { font-size: .8rem; background: #EFF6FF; padding: 6px 12px; border-radius: 30px; color: var(--primary-blue); font-weight: 700; white-space: nowrap; }
+
+        /* Status Timeline within Card */
+        .status-track { display: flex; justify-content: space-between; position: relative; margin: 15px 0; max-width: 400px; }
+        .track-line { position: absolute; top: 50%; left: 0; right: 0; height: 3px; background: var(--border-grey); z-index: 1; transform: translateY(-50%); border-radius: 10px; }
+        .track-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--border-grey); z-index: 2; position: relative; border: 3px solid var(--white); transition: 0.3s; }
+        
+        .track-dot.active { transform: scale(1.3); }
+        .track-dot.s-Pending.active { background: var(--text-grey); border-color: var(--white); }
+        .track-dot.s-Verified.active { background: var(--success-green); }
+        .track-dot.s-Shortlisted.active { background: var(--warning-orange); }
+        .track-dot.s-Hired.active { background: var(--primary-blue); }
+
+        .ac-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        
+        .status-badge { 
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; 
+            border-radius: 30px; font-weight: 800; font-size: .8rem; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .sb-Pending { background: #F3F4F6; color: var(--text-grey); }
+        .sb-Verified { background: #D1FAE5; color: var(--dark-green); }
+        .sb-Shortlisted { background: var(--warning-bg); color: #B45309; }
+        .sb-Hired { background: #EFF6FF; color: var(--primary-blue); }
+        .sb-Rejected { background: var(--danger-bg); color: var(--danger-red); }
+
+        .ac-message { font-size: .85rem; font-weight: 600; color: var(--text-grey); display: flex; align-items: center; gap: 6px; }
+
+        /* ── EMPTY STATE ──────────────────────────────────────────── */
+        .empty-state {
+            text-align: center; padding: 60px 20px; background: var(--white);
+            border-radius: 20px; border: 1px dashed var(--border-grey); display: none;
+        }
+        .empty-state-icon { font-size: 3rem; color: var(--border-grey); margin-bottom: 15px; }
+        .empty-state-title { font-size: 1.4rem; font-family: var(--font-serif); color: var(--primary-blue); margin-bottom: 8px; }
+        .empty-state-text { color: var(--text-grey); margin-bottom: 25px; font-weight: 500; }
+        
+        .btn-outline {
+            background: transparent; border: 2px solid var(--border-grey); padding: 10px 20px; border-radius: 30px;
+            font-weight: 700; color: var(--text-dark); cursor: pointer; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-main); font-size: .9rem; text-decoration: none;
+        }
+        .btn-outline:hover { background: var(--bg-light-grey); border-color: var(--primary-blue); color: var(--primary-blue); }
+
+        /* ── MODAL ────────────────────────────────────────────────── */
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-bg.open { display: flex; }
+        .modal-card { background: var(--white); width: 100%; max-width: 500px; border-radius: 24px; padding: 0; animation: slideUp .3s ease; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: var(--shadow-elevated); }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .m-head { padding: 25px 30px; border-bottom: 1px solid var(--border-grey); display: flex; justify-content: space-between; align-items: center; }
+        .m-title { font-size: 1.3rem; font-weight: 800; font-family: var(--font-serif); color: var(--primary-blue); }
+        .close-modal { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-light-grey); color: var(--text-dark); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s; border: none; }
+        .close-modal:hover { background: var(--danger-bg); color: var(--danger-red); }
+
+        .m-body { padding: 30px; }
+
+        .alert-box { padding: 20px; border-radius: 16px; margin-bottom: 25px; border-left: 4px solid transparent; font-size: .95rem; line-height: 1.5; font-weight: 500; }
+        .ab-Pending { background: #F3F4F6; border-color: var(--text-grey); color: #4B5563; }
+        .ab-Verified { background: #D1FAE5; border-color: var(--success-green); color: #065F46; }
+        .ab-Shortlisted { background: var(--warning-bg); border-color: var(--warning-orange); color: #92400E; }
+        .ab-Hired { background: #EFF6FF; border-color: var(--primary-blue); color: var(--primary-blue); }
+        .ab-Rejected { background: var(--danger-bg); border-color: var(--danger-red); color: #991B1B; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .ig-row { display: flex; justify-content: space-between; padding-bottom: 15px; border-bottom: 1px dashed var(--border-grey); align-items: center;}
+        .ig-lbl { color: var(--text-grey); font-size: .9rem; font-weight: 600; }
+        .ig-val { color: var(--text-dark); font-weight: 800; font-size: .95rem; text-align: right; }
+
+        .m-actions { padding: 25px 30px; background: var(--bg-light-grey); border-top: 1px solid var(--border-grey); display: grid; gap: 12px; }
+        .act-btn { padding: 14px; border-radius: 30px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: .95rem; width: 100%; transition: var(--transition); font-family: var(--font-main); }
+        
+        .btn-receipt { background: var(--white); border: 2px solid var(--border-grey); color: var(--text-dark); }
+        .btn-receipt:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #EFF6FF; }
+        .btn-wa { background: #25D366; color: white; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2); }
+        .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3); }
+
+        /* ── RESPONSIVE ───────────────────────────────────────────── */
+        @media (min-width: 1024px) {
+            .menu-toggle-btn { display: none !important; }
+            .sidebar { transform: translateX(0); }
+            header, .dashboard-container { margin-left: 280px; }
+            .sidebar-header .close-sidebar { display: none; }
+            .sidebar-overlay { display: none !important; }
+            header .logo-container { display: none; }
+        }
+        @media (max-width: 600px) {
+            .app-card { flex-direction: column; gap: 15px; }
+            .ac-header-row { flex-direction: column; gap: 10px; }
+            .ac-footer { flex-direction: column; align-items: flex-start; gap: 12px; border-top: 1px solid var(--border-grey); padding-top: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="seeker-dashboard.html" class="sidebar-logo">
+                <svg class="sidebar-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                    <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                    <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                    <circle cx="62" cy="24" r="10" fill="#000000"/>
+                    <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                </svg>
+                <span class="sidebar-brand">Swifthire</span>
+            </a>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarName">User</div>
+                <div class="sidebar-user-role">Job Seeker</div>
+            </div>
+            <span class="sidebar-user-badge">Free</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Main Menu</span>
+            <a href="seeker-profile.html" class="sidebar-link">
+                <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="seeker-browse-jobs.html" class="sidebar-link">
+                <i class="fas fa-search"></i> Browse Jobs
+            </a>
+            <a href="seeker-job-detail.html" class="sidebar-link">
+                <i class="fas fa-file-alt"></i> Job Detail
+            </a>
+            <a href="seeker-saved-jobs.html" class="sidebar-link">
+                <i class="fas fa-bookmark"></i> Saved Jobs
+            </a>
+            <a href="seeker-applications.html" class="sidebar-link active">
+                <i class="fas fa-folder-open"></i> My Applications
+                <span class="sidebar-badge" id="sidebarAppCount">0</span>
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Communication & Support</span>
+            <a href="seeker-contact.html" class="sidebar-link">
+                <i class="fas fa-headset"></i> Contact
+            </a>
+            <a href="seeker-help.html" class="sidebar-link">
+                <i class="fas fa-question-circle"></i> Help
+            </a>
+            <a href="seeker-messages.html" class="sidebar-link">
+                <i class="fas fa-envelope"></i> Messages
+                <span class="sidebar-badge" id="sidebarMsgCount" style="display:none;">0</span>
+            </a>
+
+            <span class="sidebar-section-label" style="margin-top:8px;">Account</span>
+            <a href="seeker-settings.html" class="sidebar-link">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-logout logout-action">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Top Header -->
+    <header id="header">
+        <div class="header-left">
+            <button id="menuToggleBtn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+            <a href="seeker-dashboard.html" class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+                        <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+                        <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+                        <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+                        <circle cx="62" cy="24" r="10" fill="#000000"/>
+                        <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Swifthire</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="seeker-messages.html" class="header-icon-btn" title="Messages">
+                <i class="fas fa-envelope"></i>
+                <div class="header-notif-dot" id="headerNotifDot"></div>
+            </a>
+            <div class="header-avatar-btn" onclick="window.location='seeker-profile.html'">
+                <div class="header-avatar" id="headerAvatarInit">U</div>
+                <span id="headerName">User</span>
+                <i class="fas fa-chevron-down" style="font-size:.7rem;color:var(--text-grey);"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard-container">
+        <div class="welcome-section">
+            <h1 class="welcome-title">My Applications</h1>
+            <p class="welcome-subtitle">Track your progress and updates for jobs you've applied to.</p>
+        </div>
+
+        <div id="appList" class="app-list">
+            <!-- Loading Skeleton -->
+            <div class="app-card" style="opacity:0.6; pointer-events:none;">
+                <div class="app-card-logo" style="background:#e5e7eb; color:transparent;">L</div>
+                <div class="app-card-content">
+                    <div style="height:20px; width:40%; background:#e5e7eb; border-radius:4px; margin-bottom:8px;"></div>
+                    <div style="height:14px; width:20%; background:#e5e7eb; border-radius:4px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="emptyState" class="empty-state">
+            <i class="fas fa-folder-open empty-state-icon"></i>
+            <h3 class="empty-state-title">No Applications Yet</h3>
+            <p class="empty-state-text">You haven't applied to any jobs yet. Browse available jobs to start your journey!</p>
+            <a href="seeker-browse-jobs.html" class="btn-outline">
+                <i class="fas fa-search"></i> Browse Jobs
+            </a>
+        </div>
+    </main>
+
+    <!-- DETAILS MODAL -->
+    <div id="detailsModal" class="modal-bg">
+        <div class="modal-card">
+            <div class="m-head">
+                <div class="m-title">Application Details</div>
+                <button class="close-modal" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="m-body" id="modalBody"></div>
+
+            <div class="m-actions">
+                <button class="act-btn btn-receipt" onclick="downloadReceipt()">
+                    <i class="fas fa-file-pdf"></i> Download Receipt
+                </button>
+                <button class="act-btn btn-wa" onclick="contactSupport()">
+                    <i class="fab fa-whatsapp"></i> Contact Support
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        // Sidebar Toggle Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('menuToggleBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const closeBtn = document.getElementById('closeSidebar');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            }
+
+            if(menuBtn) menuBtn.addEventListener('click', toggleSidebar);
+            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if(overlay) overlay.addEventListener('click', toggleSidebar);
+
+            // Hide-on-scroll header
+            let lastY = window.scrollY;
+            const header = document.getElementById('header');
+            window.addEventListener('scroll', () => {
+                const currY = window.scrollY;
+                if (Math.abs(currY - lastY) < 8) return;
+                header.classList.toggle('hidden', currY > lastY && currY > 70);
+                lastY = currY;
+            }, { passive: true });
+        });
+    </script>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
+            authDomain: "skilllink69-122aa.firebaseapp.com",
+            projectId: "skilllink69-122aa",
+            storageBucket: "skilllink69-122aa.firebasestorage.app",
+            messagingSenderId: "673456146518",
+            appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
+            measurementId: "G-H69LL8HKYQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firebaseAuth = getAuth(app);
+        const db = getFirestore(app);
+
+        const appList = document.getElementById('appList');
+        const emptyState = document.getElementById('emptyState');
+        const modal = document.getElementById('detailsModal');
+        const modalBody = document.getElementById('modalBody');
+
+        let currentApp = null;
+        let supportPhone = '254700000000'; // Default, fetched from settings if exists
+        let globalApplications = []; 
+
+        // AUTHENTICATION LISTENER
+        onAuthStateChanged(firebaseAuth, async (user) => {
+            if (user) {
+                // Profile loading for UI
+                try {
+                    const userDocSnap = await getDoc(doc(db, "users", user.uid));
+                    let fullName = "Job Seeker";
+                    if (userDocSnap.exists()) {
+                        fullName = userDocSnap.data().fullName || userDocSnap.data().name || "Job Seeker";
+                    }
+                    const nameParts = fullName.trim().split(" ");
+                    let initials = "U";
+                    if (nameParts.length > 1) {
+                        initials = nameParts[0].charAt(0).toUpperCase() + nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                        initials = nameParts[0].charAt(0).toUpperCase();
+                    }
+                    document.getElementById("sidebarName").textContent = fullName;
+                    document.getElementById("sidebarAvatarInit").textContent = initials;
+                    document.getElementById("headerName").textContent = fullName.split(" ")[0]; 
+                    document.getElementById("headerAvatarInit").textContent = initials;
+                } catch(e) {}
+
+                setupRealtimeListeners(user.uid);
+                loadApplications(user.uid);
+            } else {
+                window.location.replace("index.html");
+            }
+        });
+
+        // Logout
+        document.querySelectorAll('.logout-action').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
+                signOut(firebaseAuth).then(() => window.location.href = 'index.html');
+            });
+        });
+
+        function showIndexError(error) {
+            if(error.message && error.message.includes("requires an index")) {
+                const linkMatch = error.message.match(/https:\/\/[^\s]+/);
+                if(linkMatch) {
+                    document.body.innerHTML += `
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border:2px solid red; z-index:99999; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color:red; margin-top:0;">Firebase Index Required</h3>
+                        <p style="font-size:14px; color:#333;">Click the button below to auto-create the necessary index:</p>
+                        <a href="${linkMatch[0]}" target="_blank" style="background:blue; color:white; padding:12px; text-decoration:none; border-radius:5px; display:inline-block; font-weight:bold;">Create Index Now</a>
+                    </div>`;
+                }
+            }
+        }
+
+        function setupRealtimeListeners(uid) {
+            // Listen for Applications Count to update Sidebar
+            const appsQuery = query(collection(db, "applications"), where("userId", "==", uid));
+            onSnapshot(appsQuery, (snap) => {
+                const badge = document.getElementById('sidebarAppCount');
+                if (badge) badge.textContent = snap.size;
+            }, (error) => {
+                console.error("Applications Error:", error);
+                showIndexError(error);
+            });
+
+            // Listen for Messages Count to update Sidebar
+            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
+            onSnapshot(chatsQuery, (snap) => {
+                let unread = 0;
+                snap.forEach(d => {
+                    if(d.data().unreadCount_seeker > 0) unread++;
+                });
+                const badge = document.getElementById('sidebarMsgCount');
+                const notifDot = document.getElementById('headerNotifDot');
+                if(badge) {
+                    badge.textContent = unread;
+                    badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+                }
+                if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+            }, (error) => {
+                console.error("Chats Error:", error);
+                showIndexError(error);
+            });
+        }
+
+        async function processAndRender(appDocsList) {
+            appList.innerHTML = '';
+            globalApplications = appDocsList;
+
+            if (appDocsList.length === 0) { 
+                emptyState.style.display = 'block'; 
+                return; 
+            }
+            emptyState.style.display = 'none';
+
+            for (let app of appDocsList) {
+                if (!app.jobTitle && app.jobId) {
+                    try {
+                        const jobSnap = await getDoc(doc(db, "jobs", app.jobId));
+                        if (jobSnap.exists()) {
+                            app.jobTitle = jobSnap.data().title || jobSnap.data().jobTitle || 'Unknown Job';
+                            app.companyName = jobSnap.data().company || jobSnap.data().companyName || 'Unknown Company';
+                        }
+                    } catch(err) { console.warn("Could not fetch job info", app.id); }
+                }
+                renderCard(app);
+            }
+        }
+
+        function loadApplications(uid) {
+            const q = query(collection(db, "applications"), where("userId", "==", uid));
+            
+            onSnapshot(q, (snap) => {
+                let apps = [];
+                snap.forEach(d => apps.push({ id: d.id, ...d.data() }));
+                
+                apps.sort((a, b) => {
+                    let tA = a.appliedDate || a.appliedAt || a.createdAt || 0;
+                    let tB = b.appliedDate || b.appliedAt || b.createdAt || 0;
+                    if(tA && tA.seconds) tA = tA.seconds;
+                    if(tB && tB.seconds) tB = tB.seconds;
+                    return tB - tA;
+                });
+                
+                processAndRender(apps);
+            }, (error) => {
+                console.error("Error loading applications: ", error);
+                emptyState.style.display = 'none';
+                appList.innerHTML = `
+                    <div class="alert-box ab-Rejected">
+                        <i class="fas fa-exclamation-circle"></i> <strong>Error Loading Data</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                showIndexError(error);
+            });
+        }
+
+        function renderCard(app) {
+            let dateStr = 'N/A';
+            const rawDate = app.appliedDate || app.appliedAt || app.createdAt;
+            if(rawDate) {
+                 const d = rawDate.seconds ? new Date(rawDate.seconds*1000) : new Date(rawDate);
+                 if(!isNaN(d.getTime())) dateStr = d.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'});
+            }
+            
+            const status = app.status || 'Pending'; 
+
+            let sIcon = 'fa-clock';
+            let sClass = 'sb-Pending';
+            if(status === 'Verified') { sIcon = 'fa-check-circle'; sClass = 'sb-Verified'; }
+            else if(status === 'Shortlisted') { sIcon = 'fa-star'; sClass = 'sb-Shortlisted'; }
+            else if(status === 'Hired') { sIcon = 'fa-briefcase'; sClass = 'sb-Hired'; }
+            else if(status === 'Rejected') { sIcon = 'fa-times-circle'; sClass = 'sb-Rejected'; }
+
+            const steps = ['Pending', 'Verified', 'Shortlisted', 'Hired'];
+            let dotsHTML = '';
+            
+            if (status === 'Rejected') {
+                dotsHTML = `<div style="height:4px; background:var(--danger-bg); border-radius:2px; width:100%;"></div>`;
+            } else {
+                let currentIdx = steps.indexOf(status);
+                if(currentIdx === -1) currentIdx = 0; 
+
+                dotsHTML = `<div class="track-line"></div>`;
+                steps.forEach((st, idx) => {
+                    let active = idx <= currentIdx ? 'active' : '';
+                    let dotClass = `s-${st}`;
+                    dotsHTML += `<div class="track-dot ${dotClass} ${active}" title="${st}"></div>`;
+                });
+            }
+
+            let infoText = `<i class="fas fa-hourglass-start"></i> Waiting for review...`;
+            if(status === 'Verified') infoText = `<i class="fas fa-check-double"></i> Profile Confirmed`;
+            else if(status === 'Shortlisted') infoText = `<i class="fas fa-medal"></i> In Shortlist`;
+            else if(status === 'Hired') infoText = `<i class="fas fa-handshake"></i> Offer Extended`;
+            else if(status === 'Rejected') infoText = `<i class="fas fa-ban"></i> Application Closed`;
+
+            const companyName = app.companyName || 'Confidential';
+            const logoText = companyName.substring(0, 2).toUpperCase();
+
+            const html = `
+                <div class="app-card" onclick="openModal('${app.id}')">
+                    <div class="ac-header-row" style="width:100%;">
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <div class="app-card-logo">${logoText}</div>
+                            <div>
+                                <h3 class="ac-title">${app.jobTitle || 'Job Application'}</h3>
+                                <p class="ac-company"><i class="fas fa-building" style="color:var(--primary-blue);"></i> ${companyName}</p>
+                            </div>
+                        </div>
+                        <div class="ac-date">${dateStr}</div>
+                    </div>
+                    
+                    <div class="app-card-content">
+                        <div class="status-track">
+                            ${dotsHTML}
+                        </div>
+                        <div class="ac-footer">
+                            <div class="status-badge ${sClass}">
+                                <i class="fas ${sIcon}"></i> ${status}
+                            </div>
+                            <div class="ac-message">${infoText}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            appList.insertAdjacentHTML('beforeend', html);
+        }
+
+        window.openModal = (appId) => {
+            currentApp = globalApplications.find(a => a.id === appId);
+            if(!currentApp) return;
+
+            const st = currentApp.status || 'Pending';
+            let alertHTML = '';
+            
+            if(st === 'Pending') {
+                alertHTML = `<div class="alert-box ab-Pending"><i class="fas fa-info-circle"></i> <strong>Pending Review:</strong><br>Your application has been received and is waiting for verification.</div>`;
+            } else if(st === 'Verified') {
+                alertHTML = `<div class="alert-box ab-Verified"><i class="fas fa-check-circle"></i> <strong>Verified:</strong><br>Your details have been confirmed. You are in the pool for shortlisting.</div>`;
+            } else if(st === 'Shortlisted') {
+                alertHTML = `<div class="alert-box ab-Shortlisted"><i class="fas fa-star"></i> <strong>Shortlisted!</strong><br>You have made it to the shortlist phase. Keep an eye out for updates.</div>`;
+            } else if(st === 'Hired') {
+                alertHTML = `<div class="alert-box ab-Hired"><i class="fas fa-trophy"></i> <strong>Congratulations!</strong><br>You have been hired for this position. HR will contact you shortly.</div>`;
+            } else if(st === 'Rejected') {
+                const reason = currentApp.rejectReason || "Criteria not met.";
+                alertHTML = `<div class="alert-box ab-Rejected"><i class="fas fa-exclamation-triangle"></i> <strong>Application Closed:</strong><br>Reason: ${reason}</div>`;
+            }
+
+            let appliedDate = 'N/A';
+            const rawDate = currentApp.appliedDate || currentApp.appliedAt || currentApp.createdAt;
+            if(rawDate) {
+                 const d = rawDate.seconds ? new Date(rawDate.seconds*1000) : new Date(rawDate);
+                 if(!isNaN(d.getTime())) appliedDate = d.toDateString();
+            }
+
+            modalBody.innerHTML = `
+                ${alertHTML}
+                <div class="info-grid">
+                    <div class="ig-row">
+                        <span class="ig-lbl">Job Title</span>
+                        <span class="ig-val">${currentApp.jobTitle || 'N/A'}</span>
+                    </div>
+                    <div class="ig-row">
+                        <span class="ig-lbl">Reference ID</span>
+                        <span class="ig-val">#${currentApp.id.slice(-6).toUpperCase()}</span>
+                    </div>
+                    <div class="ig-row">
+                        <span class="ig-lbl">M-Pesa Code</span>
+                        <span class="ig-val" style="font-family:monospace; color:var(--primary-blue);">${currentApp.mpesaCode || currentApp.transactionCode || 'N/A'}</span>
+                    </div>
+                    <div class="ig-row">
+                        <span class="ig-lbl">Status</span>
+                        <span class="ig-val">${st}</span>
+                    </div>
+                    <div class="ig-row" style="border:none">
+                        <span class="ig-lbl">Applied On</span>
+                        <span class="ig-val">${appliedDate}</span>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('open');
+        };
+
+        window.closeModal = () => modal.classList.remove('open');
+
+        window.downloadReceipt = () => {
+            if(!currentApp) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(24); doc.setTextColor(0, 0, 204);
+            doc.text("Swifthire", 14, 20);
+            
+            doc.setFontSize(10); doc.setTextColor(100);
+            doc.text("Official Application Receipt", 14, 28);
+            
+            const data = [
+                ["Application ID", currentApp.id],
+                ["Candidate", currentApp.fullName || currentApp.applicantName || "User"],
+                ["Position", currentApp.jobTitle || 'N/A'],
+                ["M-Pesa Code", currentApp.mpesaCode || currentApp.transactionCode || "N/A"],
+                ["Current Status", currentApp.status || "Pending"],
+                ["Date", new Date().toLocaleString()]
+            ];
+
+            doc.autoTable({
+                startY: 35,
+                head: [['Field', 'Detail']],
+                body: data,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 0, 204] }
+            });
+
+            if(currentApp.status === 'Hired') {
+                doc.setTextColor(0, 0, 204); doc.setFontSize(40);
+               doc.text("HIRED", 100, 100, {angle: 45, align:'center', opacity:0.1});
+            } else if(currentApp.status === 'Verified') {
+                doc.setTextColor(16, 185, 129); doc.setFontSize(40);
+                doc.text("VERIFIED", 100, 100, {angle: 45, align:'center', opacity:0.1});
+            } else if(currentApp.status === 'Shortlisted') {
+                doc.setTextColor(245, 158, 11); doc.setFontSize(40);
+                doc.text("SHORTLISTED", 100, 100, {angle: 45, align:'center', opacity:0.1});
+            }
+
+            const safeCode = currentApp.mpesaCode || currentApp.transactionCode || currentApp.id.slice(-4);
+            doc.save(`Swifthire_Receipt_${safeCode}.pdf`);
+        };
+
+        window.contactSupport = () => {
+            window.open('https://chat.whatsapp.com/DeVWzReMCwdHOc9o0Ev1Qs', '_blank');
+        };
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
