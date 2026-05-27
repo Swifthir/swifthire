@@ -8,23 +8,23 @@ const STATIC_CACHE = 'swifthire-static-v1';
 const DYNAMIC_CACHE = 'swifthire-dynamic-v1';
 const IMAGE_CACHE = 'swifthire-images-v1';
 
-// Static assets to cache on install (Updated to relative paths)
+// Static assets to cache on install (Updated to strict relative paths for GitHub Pages)
 const STATIC_ASSETS = [
   './',
-  'index.html',
-  'auth-signin.html',
-  'auth-forgot-password.html',
-  'assets/css/main.css', 
-  'manifest.json',
-  'icons/icon-72x72.png',
-  'icons/icon-96x96.png',
-  'icons/icon-128x128.png',
-  'icons/icon-144x144.png',
-  'icons/icon-152x152.png',
-  'icons/icon-192x192.png',
-  'icons/icon-384x384.png',
-  'icons/icon-512x512.png',
-  'icons/maskable-icon.png'
+  './index.html',
+  './auth-signin.html',
+  './auth-forgot-password.html',
+  './assets/css/main.css', 
+  './manifest.json',
+  './icons/icon-72x72.png',
+  './icons/icon-96x96.png',
+  './icons/icon-128x128.png',
+  './icons/icon-144x144.png',
+  './icons/icon-152x152.png',
+  './icons/icon-192x192.png',
+  './icons/icon-384x384.png',
+  './icons/icon-512x512.png',
+  './icons/maskable-icon.png'
 ];
 
 // Install event - cache static assets
@@ -139,7 +139,7 @@ async function networkFirst(request, cacheName) {
     
     // Return offline fallback for HTML pages
     if (request.headers.get('accept')?.includes('text/html')) {
-      return cache.match('offline.html');
+      return cache.match('./offline.html'); // Updated to relative path
     }
     
     throw error;
@@ -191,8 +191,8 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: 'icons/icon-192x192.png',
-    badge: 'icons/badge-72x72.png',
+    icon: './icons/icon-192x192.png', // Updated to relative path
+    badge: './icons/badge-72x72.png', // Updated to relative path
     tag: data.tag || 'default',
     requireInteraction: data.requireInteraction || false,
     actions: data.actions || [],
