@@ -150,9 +150,14 @@
         .conversation-item:last-child { border-bottom: none; }
         .conversation-item:hover { background: var(--bg-light-grey); }
         .conversation-item.active { background: #EFF6FF; border-left: 4px solid var(--bright-blue); padding-left: 16px; }
+        
+        .conversation-item.system-alerts { background: #FEF2F2; }
+        .conversation-item.system-alerts:hover { background: #FEE2E2; }
+        .conversation-item.system-alerts.active { background: #FEF2F2; border-left: 4px solid var(--danger-red); }
 
         .conv-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: var(--white); flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.10); }
         .conv-avatar.blue   { background: var(--gradient-blue); }
+        .conv-avatar.red    { background: linear-gradient(135deg, #EF4444, #B91C1C); }
         
         .conv-details { flex: 1; min-width: 0; }
         .conv-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
@@ -173,6 +178,7 @@
         .chat-header { padding: 18px 24px; border-bottom: 1px solid var(--border-grey); background: var(--bg-light-grey); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
         .chat-header-left { display: flex; align-items: center; gap: 14px; }
         .chat-header-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; color: var(--white); font-weight: 800; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,204,0.15); }
+        .chat-header-avatar.system { background: linear-gradient(135deg, #EF4444, #B91C1C); box-shadow: 0 4px 10px rgba(239,68,68,0.15); }
         .chat-header-text h3 { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
         .chat-status { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-grey); font-weight: 600; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success-green); box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
@@ -192,6 +198,7 @@
         .message-wrapper { display: flex; flex-direction: column; max-width: 72%; }
         .message-wrapper.received { align-self: flex-start; }
         .message-wrapper.sent     { align-self: flex-end; align-items: flex-end; }
+        .message-wrapper.system   { max-width: 85%; align-self: center; align-items: center; text-align: center; }
 
         .msg-sender { font-size: 0.75rem; font-weight: 700; color: var(--text-grey); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
         .msg-sender-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--gradient-blue); display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 0.6rem; font-weight: 800; }
@@ -199,6 +206,8 @@
         .message { padding: 13px 18px; font-size: 0.93rem; font-weight: 500; line-height: 1.55; position: relative; word-wrap: break-word; }
         .message.received { background: var(--bg-light-grey); color: var(--text-dark); border-radius: 18px 18px 18px 4px; border: 1px solid var(--border-grey); }
         .message.sent { background: var(--gradient-blue); color: var(--white); border-radius: 18px 18px 4px 18px; box-shadow: 0 4px 15px rgba(0,0,204,0.15); }
+        .message.system { background: #FEF2F2; color: #991B1B; border-radius: 12px; border: 1px solid #FECACA; font-size: 0.85rem; padding: 10px 16px; }
+        .message.system i { margin-right: 6px; }
 
         .message-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
         .message-time { font-size: 0.73rem; color: #9CA3AF; font-weight: 600; }
@@ -243,6 +252,7 @@
             .conversations-panel { max-height: 360px; }
             .chat-area { height: 560px; }
             .message-wrapper { max-width: 88%; }
+            .message-wrapper.system { max-width: 95%; }
         }
     </style>
 </head>
@@ -336,7 +346,7 @@
     <main class="page-wrapper">
         <div class="page-header">
             <h1 class="page-title">Messages</h1>
-            <p class="page-subtitle">Communicate directly with employers</p>
+            <p class="page-subtitle">Communicate directly with employers and system alerts</p>
         </div>
 
         <div class="messages-layout">
@@ -380,7 +390,7 @@
                         </div>
                     </div>
                     <div class="chat-header-actions">
-                        <button class="chat-action-btn" title="View Job" onclick="window.viewJob()"><i class="fas fa-briefcase"></i></button>
+                        <button class="chat-action-btn" title="View Details" onclick="window.viewJob()"><i class="fas fa-briefcase"></i></button>
                     </div>
                 </div>
 
@@ -466,7 +476,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
@@ -486,6 +496,8 @@
         let activeChatId = null;
         let messagesUnsubscribe = null;
         let chatsData = {};
+        let systemAlerts = [];
+        let systemUnread = 0;
 
         function showIndexError(error) {
             if(error.message && error.message.includes("requires an index")) {
@@ -512,27 +524,130 @@
                 }
             }, (error) => {
                 console.error("Applications Listener Error:", error);
+            });
+
+            // Listen for System Notifications (Payments, App Status, general alerts)
+            const notifQuery = query(collection(db, "notifications"), where("userId", "==", uid), orderBy("createdAt", "desc"));
+            onSnapshot(notifQuery, (snap) => {
+                systemAlerts = [];
+                systemUnread = 0;
+                snap.forEach(d => {
+                    const data = d.data();
+                    data.id = d.id;
+                    systemAlerts.push(data);
+                    if(!data.read) systemUnread++;
+                });
+
+                // Maintain System Alerts as a virtual chat conversation
+                chatsData['system_alerts'] = {
+                    id: 'system_alerts',
+                    employerName: 'System Alerts',
+                    jobTitle: 'Account & Platform Updates',
+                    updatedAt: systemAlerts.length > 0 ? systemAlerts[0].createdAt : new Date(),
+                    lastMessage: systemAlerts.length > 0 ? systemAlerts[0].message : 'No new notifications.',
+                    unreadCount_seeker: systemUnread,
+                    isSystem: true
+                };
+
+                updateTotalUnread();
+                renderConversationsList();
+
+                if (activeChatId === 'system_alerts') {
+                    renderSystemMessages();
+                }
+            }, (error) => {
+                console.error("Notifications Listener Error:", error);
                 showIndexError(error);
             });
 
-            // Listen for Messages Count to update Sidebar (we do this globally as well)
-            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
+            // Listen for normal Employer Chats
+            const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid), orderBy("updatedAt", "desc"));
             onSnapshot(chatsQuery, (snap) => {
-                let unread = 0;
-                snap.forEach(d => {
-                    if(d.data().unreadCount_seeker > 0) unread++;
+                // Preserve system alerts entry
+                const sysAlert = chatsData['system_alerts'];
+                chatsData = {};
+                if(sysAlert) chatsData['system_alerts'] = sysAlert;
+
+                snap.forEach(docSnap => {
+                    const chat = docSnap.data();
+                    chat.id = docSnap.id;
+                    chatsData[chat.id] = chat;
                 });
-                const badge = document.getElementById('sidebarMsgCount');
-                const notifDot = document.getElementById('headerNotifDot');
-                if(badge) {
-                    badge.textContent = unread;
-                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
-                }
-                if(notifDot) notifDot.style.display = unread > 0 ? 'block' : 'none';
+                
+                updateTotalUnread();
+                renderConversationsList();
             }, (error) => {
                 console.error("Chats Listener Error:", error);
                 showIndexError(error);
             });
+        }
+
+        function updateTotalUnread() {
+            let totalUnread = systemUnread;
+            Object.values(chatsData).forEach(chat => {
+                if(!chat.isSystem && chat.unreadCount_seeker > 0) totalUnread++;
+            });
+            const badge = document.getElementById('sidebarMsgCount');
+            const notifDot = document.getElementById('headerNotifDot');
+            
+            if(badge) {
+                badge.textContent = totalUnread;
+                badge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
+            }
+            if(notifDot) {
+                notifDot.style.display = totalUnread > 0 ? 'block' : 'none';
+            }
+        }
+
+        function renderConversationsList() {
+            const list = document.getElementById('conversationsList');
+            const sortedChats = Object.values(chatsData).sort((a, b) => {
+                const timeA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : (new Date(a.updatedAt || 0)).getTime();
+                const timeB = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : (new Date(b.updatedAt || 0)).getTime();
+                return timeB - timeA; // Descending
+            });
+
+            document.getElementById('convCount').textContent = sortedChats.length;
+
+            if(sortedChats.length === 0) {
+                list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-grey);">No conversations yet.</div>';
+                return;
+            }
+
+            let html = '';
+            sortedChats.forEach(chat => {
+                const timeStr = chat.updatedAt ? window.formatTime(chat.updatedAt) : '';
+                const unread = (chat.unreadCount_seeker || 0) > 0;
+                const activeClass = activeChatId === chat.id ? 'active' : '';
+                const systemClass = chat.isSystem ? 'system-alerts' : '';
+                
+                const empName = chat.employerName || 'Employer';
+                const initials = chat.isSystem ? '<i class="fas fa-bell"></i>' : empName.substring(0,2).toUpperCase();
+                const snippet = chat.lastMessage || 'No messages yet';
+                const avatarColor = chat.isSystem ? 'red' : 'blue';
+
+                html += `
+                <div class="conversation-item ${activeClass} ${systemClass}" data-conv="${chat.id}" onclick="window.switchConversation('${chat.id}')">
+                    <div class="conv-avatar ${avatarColor}">${initials}</div>
+                    <div class="conv-details">
+                        <div class="conv-name-row">
+                            <span class="conv-name ${unread?'unread':''}">${window.escapeHTML(empName)}</span>
+                            <span class="conv-time">${timeStr}</span>
+                        </div>
+                        <p class="conv-snippet ${unread?'unread':''}">${window.escapeHTML(snippet)}</p>
+                    </div>
+                    ${unread ? `<span class="unread-badge">${chat.unreadCount_seeker}</span>` : ''}
+                </div>`;
+            });
+
+            list.innerHTML = html;
+
+            // Update header UI if currently active chat details changed
+            if(activeChatId && chatsData[activeChatId]) {
+                const actChat = chatsData[activeChatId];
+                document.getElementById('chatHeaderName').textContent = actChat.employerName || 'Employer';
+                document.getElementById('chatHeaderSub').textContent = actChat.jobTitle || 'General Inquiry';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -565,8 +680,6 @@
                         document.getElementById("sidebarAvatarInit").textContent = initials;
                         document.getElementById("headerName").textContent = nameParts[0]; 
                         document.getElementById("headerAvatarInit").textContent = initials;
-                        
-                        loadConversations(user);
 
                     } catch (error) {
                         console.error("Error fetching user data:", error);
@@ -586,68 +699,9 @@
             });
         });
 
-        function loadConversations(user) {
-            const q = query(collection(db, "chats"), where("seekerId", "==", user.uid), orderBy("updatedAt", "desc"));
-            
-            onSnapshot(q, (snapshot) => {
-                const list = document.getElementById('conversationsList');
-                document.getElementById('convCount').textContent = snapshot.size;
-                
-                if(snapshot.empty) {
-                    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-grey);">No conversations yet. Apply for jobs to start connecting!</div>';
-                    return;
-                }
-
-                let html = '';
-                chatsData = {};
-
-                snapshot.forEach(docSnap => {
-                    const chat = docSnap.data();
-                    chat.id = docSnap.id;
-                    chatsData[chat.id] = chat;
-                    
-                    const timeStr = chat.updatedAt ? window.formatTime(chat.updatedAt) : '';
-                    const unread = (chat.unreadCount_seeker || 0) > 0;
-
-                    const activeClass = activeChatId === chat.id ? 'active' : '';
-                    const empName = chat.employerName || 'Employer';
-                    const initials = empName.substring(0,2).toUpperCase();
-                    const snippet = chat.lastMessage || 'No messages yet';
-                    
-                    html += `
-                    <div class="conversation-item ${activeClass}" data-conv="${chat.id}" onclick="window.switchConversation('${chat.id}')">
-                        <div class="conv-avatar blue">${initials}</div>
-                        <div class="conv-details">
-                            <div class="conv-name-row">
-                                <span class="conv-name ${unread?'unread':''}">${window.escapeHTML(empName)}</span>
-                                <span class="conv-time">${timeStr}</span>
-                            </div>
-                            <p class="conv-snippet ${unread?'unread':''}">${window.escapeHTML(snippet)}</p>
-                        </div>
-                        ${unread ? `<span class="unread-badge">${chat.unreadCount_seeker}</span>` : ''}
-                    </div>`;
-                });
-
-                list.innerHTML = html;
-                
-                // Update active chat UI if it was updated
-                if(activeChatId && chatsData[activeChatId]) {
-                    document.getElementById('chatHeaderName').textContent = chatsData[activeChatId].employerName || 'Employer';
-                    document.getElementById('chatHeaderSub').textContent = chatsData[activeChatId].jobTitle || 'General Inquiry';
-                }
-            }, (error) => {
-                console.error("Error loading conversations:", error);
-                document.getElementById('conversationsList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger-red);">Error loading conversations.</div>';
-                showIndexError(error);
-            });
-        }
-
         window.switchConversation = function(chatId) {
             activeChatId = chatId;
-            
-            document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
-            const activeEl = document.querySelector(`[data-conv="${chatId}"]`);
-            if(activeEl) activeEl.classList.add('active');
+            renderConversationsList(); // re-render to update active styling
             
             const chat = chatsData[chatId];
             if(!chat) return;
@@ -655,49 +709,117 @@
             document.getElementById('chatEmptyState').style.display = 'none';
             document.getElementById('chatHeader').style.display = 'flex';
             document.getElementById('chatMessages').style.display = 'flex';
-            document.getElementById('chatInputArea').style.display = 'flex';
-
-            const empName = chat.employerName || 'Employer';
-            document.getElementById('chatHeaderName').textContent = empName;
-            document.getElementById('chatHeaderSub').textContent = chat.jobTitle || 'General Inquiry';
-            document.getElementById('chatHeaderAvatar').textContent = empName.substring(0,2).toUpperCase();
-
-            // Clear unread count
-            if(chat.unreadCount_seeker > 0) {
-                updateDoc(doc(db, "chats", chatId), { unreadCount_seeker: 0 }).catch(e => console.error(e));
+            
+            const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+            if(chat.isSystem) {
+                chatHeaderAvatar.innerHTML = '<i class="fas fa-bell"></i>';
+                chatHeaderAvatar.classList.add('system');
+                document.getElementById('chatInputArea').style.display = 'none'; // Disable input for system
+            } else {
+                const empName = chat.employerName || 'Employer';
+                chatHeaderAvatar.innerHTML = empName.substring(0,2).toUpperCase();
+                chatHeaderAvatar.classList.remove('system');
+                document.getElementById('chatInputArea').style.display = 'flex';
             }
 
-            // Load Messages
-            if(messagesUnsubscribe) messagesUnsubscribe();
-            
-            const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
-            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-                const cm = document.getElementById('chatMessages');
-                let html = `<div class="job-tag"><i class="fas fa-briefcase"></i> Re: ${window.escapeHTML(chat.jobTitle || 'General')} at ${window.escapeHTML(empName)}</div>`;
-                
-                snapshot.forEach(docSnap => {
-                    const msg = docSnap.data();
-                    const isMe = msg.senderId === currentUser.uid;
-                    const timeStr = msg.createdAt ? window.formatTime(msg.createdAt) : 'Just now';
+            document.getElementById('chatHeaderName').textContent = chat.employerName || 'Employer';
+            document.getElementById('chatHeaderSub').textContent = chat.jobTitle || 'General Inquiry';
+
+            if(messagesUnsubscribe) {
+                messagesUnsubscribe();
+                messagesUnsubscribe = null;
+            }
+
+            if(chat.isSystem) {
+                renderSystemMessages();
+                markSystemAlertsRead();
+            } else {
+                // Clear direct chat unread count
+                if(chat.unreadCount_seeker > 0) {
+                    updateDoc(doc(db, "chats", chatId), { unreadCount_seeker: 0 }).catch(e => console.error(e));
+                }
+
+                // Load Direct Messages
+                const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
+                messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                    const cm = document.getElementById('chatMessages');
+                    let html = `<div class="job-tag"><i class="fas fa-briefcase"></i> Re: ${window.escapeHTML(chat.jobTitle || 'General')}</div>`;
                     
-                    if(isMe) {
-                        html += `<div class="message-wrapper sent msg-fade"><div class="message sent">${window.escapeHTML(msg.text)}</div><div class="message-meta"><span class="message-time">${timeStr}</span><i class="fas fa-check-double read-receipt ${msg.read ? 'seen':''}"></i></div></div>`;
-                    } else {
-                        const initials = empName.substring(0,2).toUpperCase();
-                        html += `<div class="message-wrapper received msg-fade"><div class="msg-sender"><span class="msg-sender-dot">${initials}</span>${window.escapeHTML(empName)}</div><div class="message received">${window.escapeHTML(msg.text)}</div><div class="message-meta"><span class="message-time">${timeStr}</span></div></div>`;
-                    }
+                    snapshot.forEach(docSnap => {
+                        const msg = docSnap.data();
+                        const isMe = msg.senderId === currentUser.uid;
+                        const timeStr = msg.createdAt ? window.formatTime(msg.createdAt) : 'Just now';
+                        
+                        if(isMe) {
+                            html += `<div class="message-wrapper sent msg-fade"><div class="message sent">${window.escapeHTML(msg.text)}</div><div class="message-meta"><span class="message-time">${timeStr}</span><i class="fas fa-check-double read-receipt ${msg.read ? 'seen':''}"></i></div></div>`;
+                        } else {
+                            const initials = (chat.employerName || 'Employer').substring(0,2).toUpperCase();
+                            html += `<div class="message-wrapper received msg-fade"><div class="msg-sender"><span class="msg-sender-dot">${initials}</span>${window.escapeHTML(chat.employerName || 'Employer')}</div><div class="message received">${window.escapeHTML(msg.text)}</div><div class="message-meta"><span class="message-time">${timeStr}</span></div></div>`;
+                        }
+                    });
+                    
+                    cm.innerHTML = html;
+                    window.scrollToBottom();
+                }, (error) => {
+                    console.error("Error loading messages:", error);
+                    showIndexError(error);
                 });
-                
-                cm.innerHTML = html;
-                window.scrollToBottom();
-            }, (error) => {
-                console.error("Error loading messages:", error);
-                showIndexError(error);
-            });
+            }
         };
 
+        function renderSystemMessages() {
+            const cm = document.getElementById('chatMessages');
+            let html = `<div class="job-tag" style="background:#FEF2F2; color:#B91C1C; border-color:#FECACA;"><i class="fas fa-shield-alt"></i> Official Platform Alerts</div>`;
+            
+            if(systemAlerts.length === 0) {
+                html += `<div style="text-align:center; color:var(--text-grey); padding: 40px;">No system alerts. You're all caught up!</div>`;
+            } else {
+                // Reverse array so newest is at the bottom like a chat
+                const reversedAlerts = [...systemAlerts].reverse();
+                
+                reversedAlerts.forEach(alert => {
+                    const timeStr = alert.createdAt ? window.formatTime(alert.createdAt) : 'Recently';
+                    let icon = 'fa-info-circle';
+                    if(alert.type === 'payment') icon = 'fa-credit-card';
+                    if(alert.type === 'application') icon = 'fa-file-signature';
+                    if(alert.type === 'verification') icon = 'fa-user-check';
+
+                    html += `
+                    <div class="message-wrapper system msg-fade">
+                        <div class="message system">
+                            <div style="font-weight:800; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                                <i class="fas ${icon}"></i> ${window.escapeHTML(alert.title || 'System Notification')}
+                            </div>
+                            ${window.escapeHTML(alert.message)}
+                        </div>
+                        <div class="message-meta" style="justify-content:center;">
+                            <span class="message-time">${timeStr}</span>
+                        </div>
+                    </div>`;
+                });
+            }
+            cm.innerHTML = html;
+            window.scrollToBottom();
+        }
+
+        async function markSystemAlertsRead() {
+            const unreadAlerts = systemAlerts.filter(a => !a.read);
+            if(unreadAlerts.length === 0) return;
+
+            // Batch update all unread notifications
+            try {
+                const batch = writeBatch(db);
+                unreadAlerts.forEach(alert => {
+                    batch.update(doc(db, "notifications", alert.id), { read: true });
+                });
+                await batch.commit();
+            } catch(e) {
+                console.error("Error marking alerts read:", e);
+            }
+        }
+
         window.sendMessage = async function() {
-            if(!activeChatId || !currentUser) return;
+            if(!activeChatId || !currentUser || activeChatId === 'system_alerts') return;
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
             if(!text) return;
@@ -724,14 +846,29 @@
         };
 
         window.viewJob = function() {
-            if(!activeChatId || !chatsData[activeChatId]) return;
-            const jobId = chatsData[activeChatId].jobId;
-            if(jobId) {
-                window.location.href = `seeker-job-detail.html?id=${jobId}`;
+            if(!activeChatId) return;
+            if(activeChatId === 'system_alerts') {
+                window.location.href = `seeker-dashboard.html`;
+                return;
+            }
+            const chat = chatsData[activeChatId];
+            if(chat && chat.jobId) {
+                window.location.href = `seeker-job-detail.html?id=${chat.jobId}`;
             } else {
                 window.showToast("Job details not available.", "error");
             }
         };
+    </script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
     </script>
 </body>
 </html>
