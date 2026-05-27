@@ -25,5 +25,5 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Export auth and db so other HTML files can use them
-export { auth, db };
+// Export app, auth, and db so other HTML files can use them
+export { app, auth, db };
