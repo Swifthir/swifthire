@@ -280,15 +280,84 @@
     .footer-legal a { font-size: 0.875rem; color: #4B5563; transition: var(--transition); }
     .footer-legal a:hover { color: var(--white); }
 
-    /* INSTALL PROMPT */
-    .install-prompt { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--white); border-radius: var(--radius-2xl); box-shadow: var(--shadow-hover); padding: 16px 20px; z-index: 200; animation: slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid var(--gray-100); min-width: 340px; }
-    @keyframes slide-up { from { transform: translateX(-50%) translateY(120%); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-    .install-prompt-content { display: flex; align-items: center; gap: 16px; }
-    .install-prompt-icon { width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: var(--shadow-blue); }
-    .install-prompt-text h4 { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); font-family: var(--font-main); }
-    .install-prompt-text p { font-size: 0.82rem; color: var(--gray-400); margin-top: 2px; }
-    .install-prompt-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--gray-400); transition: var(--transition); cursor: pointer; margin-left: auto; flex-shrink: 0; border: none; background: transparent; }
-    .install-prompt-close:hover { background: var(--gray-100); color: var(--text-dark); }
+    /* ---- PWA App Install Pop-Up Modal CSS ---- */
+    .pwa-popup-overlay {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        background: var(--white);
+        padding: 16px 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid var(--gray-200);
+        animation: pwaSlideUp 0.4s ease forwards;
+        display: none; /* Hidden by default */
+    }
+    .pwa-popup-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-50);
+        color: var(--primary-600);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .pwa-popup-content h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        font-family: var(--font-main);
+    }
+    .pwa-popup-content p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-grey);
+    }
+    .pwa-popup-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-left: auto;
+    }
+    .pwa-popup-actions button {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s ease;
+        font-family: var(--font-main);
+    }
+    .btn-pwa-install {
+        background: var(--primary-600);
+        color: #ffffff;
+    }
+    .btn-pwa-install:hover {
+        background: var(--primary-700);
+    }
+    .btn-pwa-dismiss {
+        background: transparent;
+        color: var(--text-grey);
+    }
+    .btn-pwa-dismiss:hover {
+        background: rgba(0,0,0,0.05);
+    }
+    @keyframes pwaSlideUp {
+        from { transform: translate(-50%, 100%); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
 
     /* SCROLL TO TOP */
     .scroll-top { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--white); cursor: pointer; z-index: 100; box-shadow: var(--shadow-blue); border: none; opacity: 0; transform: translateY(20px); transition: var(--transition); pointer-events: none; }
@@ -333,7 +402,6 @@
       .footer-bottom { flex-direction: column; text-align: center; }
       .footer-legal { flex-wrap: wrap; justify-content: center; gap: 16px; }
       .featured-jobs, .how-it-works { padding: 70px 0; }
-      .install-prompt { min-width: calc(100vw - 48px); }
     }
 
     /* ============================================
@@ -882,35 +950,24 @@
   <!-- ============================================
        INSTALL PROMPT (PWA)
   ============================================ -->
-  <div class="install-prompt" id="installPrompt" role="dialog"
-       aria-labelledby="installTitle" aria-hidden="true" style="display:none;">
-    <div class="install-prompt-content">
-      <div class="install-prompt-icon" aria-hidden="true" style="background:transparent; box-shadow:none;">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
-            <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
-            <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
-            <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
-            <circle cx="62" cy="24" r="10" fill="#000000"/>
-            <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
-        </svg>
+  <div id="pwaPopup" class="pwa-popup-overlay">
+      <div class="pwa-popup-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#000000" stroke-width="4"/>
+              <path d="M 12 55 C 12 75, 25 88, 42 92 C 30 84, 22 68, 22 55 Z" fill="#0000CC"/>
+              <path d="M 88 55 C 88 75, 75 88, 58 92 C 70 84, 78 68, 78 55 Z" fill="#0000CC"/>
+              <circle cx="62" cy="24" r="10" fill="#000000"/>
+              <path d="M 72 12 C 40 0, 15 30, 42 48 C 62 60, 72 75, 52 88" fill="none" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+          </svg>
       </div>
-      <div class="install-prompt-text">
-        <h4 id="installTitle">Install Swifthire</h4>
-        <p>Add to your home screen for quick access</p>
+      <div class="pwa-popup-content">
+          <h4>Install App</h4>
+          <p>Install Swifthire for a better experience</p>
       </div>
-      <button class="install-prompt-close" id="installClose"
-              aria-label="Close install prompt">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <button class="btn btn-primary btn-sm" id="installBtn"
-            style="width:100%;margin-top:14px;" aria-label="Install app">
-      Install App
-    </button>
+      <div class="pwa-popup-actions">
+          <button id="pwaInstallBtn" class="btn-pwa-install">Install</button>
+          <button id="pwaDismissBtn" class="btn-pwa-dismiss">Not now</button>
+      </div>
   </div>
 
   <!-- ============================================
@@ -1013,37 +1070,48 @@
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-    // PWA Install Prompt
-    let deferredPrompt = null;
-    const installPrompt = document.getElementById('installPrompt');
-    const installBtn    = document.getElementById('installBtn');
-    const installClose  = document.getElementById('installClose');
+    // PWA INSTALL LOGIC
+    let deferredPrompt;
+    const pwaPopup = document.getElementById('pwaPopup');
+    const installBtn = document.getElementById('pwaInstallBtn');
+    const dismissBtn = document.getElementById('pwaDismissBtn');
 
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (installPrompt) {
-        installPrompt.style.display = 'block';
-        installPrompt.setAttribute('aria-hidden', 'false');
-      }
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+        // Show the custom install popup
+        if(pwaPopup) pwaPopup.style.display = 'flex';
     });
 
-    installBtn?.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      if (installPrompt) {
-        installPrompt.style.display = 'none';
-        installPrompt.setAttribute('aria-hidden', 'true');
-      }
-    });
+    if(installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, throw it away
+            deferredPrompt = null;
+            // Hide the popup
+            if(pwaPopup) pwaPopup.style.display = 'none';
+        });
+    }
 
-    installClose?.addEventListener('click', () => {
-      if (installPrompt) {
-        installPrompt.style.display = 'none';
-        installPrompt.setAttribute('aria-hidden', 'true');
-      }
+    if(dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            if(pwaPopup) pwaPopup.style.display = 'none';
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        // Hide the app-provided install promotion
+        if(pwaPopup) pwaPopup.style.display = 'none';
+        // Clear the deferredPrompt so it can be garbage collected
+        deferredPrompt = null;
+        console.log('PWA was installed');
     });
   </script>
 
@@ -1297,4 +1365,4 @@
     }
   </script>
 </body>
-</html>
+</html>```
