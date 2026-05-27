@@ -13,17 +13,17 @@
   <meta property="og:description" content="Kenya's premier professional job board platform">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://swifthire.pro">
-  <meta property="og:image" content="icons/icon-512x512.png">
+  <meta property="og:image" content="./icons/icon-512x512.png">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Swifthire">
   <meta name="twitter:description" content="Find your dream job today">
-  <meta name="twitter:image" content="icons/icon-512x512.png">
+  <meta name="twitter:image" content="./icons/icon-512x512.png">
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <!-- PWA (Updated to relative paths for GitHub Pages) -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
 
   <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
   <title id="pageTitle">Swifthire - Find Your Dream Job</title>
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="./assets/css/main.css">
 
   <style>
     /* ============================================
@@ -1356,7 +1356,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(registration => {
+        navigator.serviceWorker.register('./sw.js').then(registration => {
           console.log('SW registered: ', registration);
         }).catch(registrationError => {
           console.log('SW registration failed: ', registrationError);
