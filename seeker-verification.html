@@ -614,7 +614,8 @@
                                 <h4>Standard Review</h4>
                                 <p>Regular profile processing queue</p>
                             </div>
-                            <div class="tier-price" id="feeStandardDisplay">Ksh 300</div>
+                            <!-- Updated Price -->
+                            <div class="tier-price" id="feeStandardDisplay">Ksh 200</div>
                         </label>
 
                         <!-- Premium Tier -->
@@ -624,7 +625,8 @@
                                 <h4>Premium Track</h4>
                                 <p>Priority listing & fast-tracked review</p>
                             </div>
-                            <div class="tier-price" id="feePremiumDisplay">Ksh 800</div>
+                            <!-- Updated Price -->
+                            <div class="tier-price" id="feePremiumDisplay">Ksh 600</div>
                         </label>
                     </div>
 
@@ -736,29 +738,16 @@
 
     <!-- FIREBASE MODULE -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { db } from './config.js';
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { doc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
-            authDomain: "skilllink69-122aa.firebaseapp.com",
-            projectId: "skilllink69-122aa",
-            storageBucket: "skilllink69-122aa.firebasestorage.app",
-            messagingSenderId: "673456146518",
-            appId: "1:673456146518:web:1d09ea145a83e25ad213f7",
-            measurementId: "G-H69LL8HKYQ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const firebaseAuth = getAuth(app);
-        const db = getFirestore(app);
+        const firebaseAuth = getAuth();
 
         let currentUser = null;
         let jobData = null;
 
-        // Get Job ID from URL
+         // Get Job ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('id');
 
@@ -828,7 +817,7 @@
         }
 
         function setupRealtimeListeners(uid) {
-            // Listen for Applications Count to update Sidebar
+            // CRITICAL FIX: Add where("userId", "==", uid) to comply with Firestore security rules
             const appsQuery = query(collection(db, "applications"), where("userId", "==", uid));
             onSnapshot(appsQuery, (snap) => {
                 const badge = document.getElementById('sidebarAppCount');
@@ -838,7 +827,7 @@
                 showIndexError(error);
             });
 
-            // Listen for Messages Count to update Sidebar
+            // CRITICAL FIX: Add where("seekerId", "==", uid) to comply with Firestore security rules
             const chatsQuery = query(collection(db, "chats"), where("seekerId", "==", uid));
             onSnapshot(chatsQuery, (snap) => {
                 let unread = 0;
