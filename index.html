@@ -13,17 +13,17 @@
   <meta property="og:description" content="Kenya's premier professional job board platform">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://swifthire.pro">
-  <meta property="og:image" content="/icons/icon-512x512.png">
+  <meta property="og:image" content="icons/icon-512x512.png">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Swifthire">
   <meta name="twitter:description" content="Find your dream job today">
-  <meta name="twitter:image" content="/icons/icon-512x512.png">
+  <meta name="twitter:image" content="icons/icon-512x512.png">
 
   <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
   <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
   <title id="pageTitle">Swifthire - Find Your Dream Job</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css">
 
   <style>
     /* ============================================
@@ -576,7 +576,7 @@
             Featured Opportunities
           </div>
           <h2 class="section-title" id="jobs-title">Top Jobs This Week</h2>
-          <p class="section-subtitle">Handpicked roles from Kenya's most innovative companies</p>
+          <p class="section-subtitle">Recently posted roles directly from the admin platform.</p>
         </div>
         <a href="auth-signup.html" class="btn btn-outline btn-sm" aria-label="View all available jobs">
           View All Jobs
@@ -1051,20 +1051,8 @@
        FIREBASE JAVASCRIPT
   ============================================ -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getFirestore, collection, query, where, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    import { db } from './config.js'; 
+    import { collection, query, where, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     function showIndexError(error) {
       if (error.message && error.message.includes('requires an index')) {
@@ -1300,7 +1288,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        navigator.serviceWorker.register('sw.js').then(registration => {
           console.log('SW registered: ', registration);
         }).catch(registrationError => {
           console.log('SW registration failed: ', registrationError);
@@ -1309,4 +1297,4 @@
     }
   </script>
 </body>
-</html>```
+</html>
