@@ -265,7 +265,7 @@
             <div class="sidebar-avatar" id="sidebarAvatarInit">U</div>
             <div class="sidebar-user-info">
                 <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-                <div class="sidebar-user-role">Job Seeker</div>
+                <div class="sidebar-user-role" id="sidebarRole">Job Seeker</div>
             </div>
         </div>
 
@@ -499,7 +499,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8AOxIyZlb_Zb21AMTW_Pp8yvJRwyXhOI",
@@ -586,6 +586,7 @@
                     
                     const fullName = data.fullName || data.name || 'Job Seeker';
                     const email = user.email || data.email || '';
+                    const role = (data.role === 'admin') ? 'Admin' : 'Job Seeker';
                     
                     const nameParts = fullName.trim().split(" ");
                     let initial = 'U';
@@ -604,8 +605,10 @@
                     // Populate Sidebar Avatar
                     const sidebarAvatar = document.getElementById('sidebarAvatarInit');
                     const sidebarName = document.getElementById('sidebarName');
+                    const sidebarRole = document.getElementById('sidebarRole');
                     if (sidebarAvatar) sidebarAvatar.textContent = initial;
                     if (sidebarName) sidebarName.textContent = fullName;
+                    if (sidebarRole) sidebarRole.textContent = role;
 
                     // Populate Profile Page Specific Fields
                     const avatarEl = document.getElementById('avatarEl');
@@ -615,7 +618,7 @@
                     if (heroName) heroName.textContent = fullName;
 
                     const heroHeadline = document.getElementById('heroHeadline');
-                    if (heroHeadline) heroHeadline.textContent = data.headline || 'Job Seeker';
+                    if (heroHeadline) heroHeadline.textContent = data.headline || role;
 
                     // Only update inputs if they are not currently focused to avoid typing interruption
                     if (document.activeElement.id !== 'fullName') {
@@ -641,6 +644,40 @@
                     }
 
                     document.getElementById('emailAddr').value = email;
+                } else {
+                    // FALLBACK: Document doesn't exist yet, use Firebase Auth data
+                    const fallbackName = user.displayName || 'Job Seeker';
+                    const nameParts = fallbackName.trim().split(" ");
+                    
+                    let initial = 'U';
+                    if (nameParts.length > 1) {
+                        initial = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                        initial = nameParts[0].charAt(0).toUpperCase();
+                    }
+
+                    const sidebarName = document.getElementById('sidebarName');
+                    if (sidebarName) sidebarName.textContent = fallbackName;
+                    
+                    const headerName = document.getElementById('headerName');
+                    if (headerName) headerName.textContent = nameParts[0] || 'User';
+                    
+                    const heroName = document.getElementById('heroName');
+                    if (heroName) heroName.textContent = fallbackName;
+
+                    const sidebarAvatar = document.getElementById('sidebarAvatarInit');
+                    if (sidebarAvatar) sidebarAvatar.textContent = initial;
+                    
+                    const headerAvatar = document.getElementById('headerAvatarInit');
+                    if (headerAvatar) headerAvatar.textContent = initial;
+                    
+                    const avatarEl = document.getElementById('avatarEl');
+                    if (avatarEl) avatarEl.textContent = initial;
+
+                    if (document.activeElement.id !== 'fullName') {
+                        document.getElementById('fullName').value = fallbackName;
+                    }
+                    document.getElementById('emailAddr').value = user.email || '';
                 }
             }, (error) => {
                 console.error("Error listening to profile data:", error);
@@ -665,7 +702,7 @@
 
             try {
                 const userRef = doc(db, "users", currentUser.uid);
-                await updateDoc(userRef, {
+                await setDoc(userRef, {
                     fullName: fullName,
                     headline: headline,
                     phone: phone,
@@ -674,7 +711,7 @@
                     portfolioUrl: portfolioUrl,
                     linkedinUrl: linkedinUrl,
                     updatedAt: new Date()
-                });
+                }, { merge: true });
                 window.showToast('Profile updated successfully!', 'success');
             } catch (error) {
                 console.error("Error updating profile:", error);
